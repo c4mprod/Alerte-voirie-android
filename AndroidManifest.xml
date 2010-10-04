@@ -23,10 +23,11 @@
 <activity android:name="ReportDetailsActivity" android:screenOrientation="portrait"></activity>
 <activity android:name="AddCommentActivity" android:windowSoftInputMode="adjustResize"></activity>
 </application>
-    <uses-sdk android:minSdkVersion="3" />
+    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="4"/>
 
 <uses-permission android:name="android.permission.INTERNET"></uses-permission>
 
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
+<uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
 </manifest> 
