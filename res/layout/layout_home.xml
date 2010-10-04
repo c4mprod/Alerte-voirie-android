@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <Button
+        android:id="@+id/Button_new_incident"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/home_btn_new_incident"
+        android:background="@drawable/btn_new_incident" android:layout_marginLeft="@dimen/home_button_margin_side" android:layout_marginBottom="@dimen/home_button_vertical_spacing" android:layout_marginTop="@dimen/home_button_vertical_spacing"/>
+    <Button
+        android:id="@+id/Button_incidents"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_alignParentRight="true"
+        android:text="@string/home_btn_incidents"
+        android:background="@drawable/btn_incidents" android:layout_marginRight="@dimen/home_button_margin_side" android:layout_marginBottom="@dimen/home_button_vertical_spacing" android:layout_marginTop="@dimen/home_button_vertical_spacing"/>
+    <Button
+        android:id="@+id/Button_reports"
+        android:layout_below="@+id/Button_incidents"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="@string/home_btn_reports"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/btn_reports" android:layout_marginRight="@dimen/home_button_margin_side"/>
+    <Button
+        android:id="@+id/Button_news"
+        android:layout_below="@+id/Button_new_incident"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="@string/home_btn_news"
+        android:background="@drawable/btn_news" android:layout_marginLeft="@dimen/home_button_margin_side"/>
+
+
+</RelativeLayout>

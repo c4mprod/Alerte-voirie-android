@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="home_button_margin_side">22dip</dimen>
+    <dimen name="home_button_vertical_spacing">18dip</dimen>
+    
+    <dimen name="ui_padding_left">10dip</dimen>
+    <dimen name="ui_margin_side">10dip</dimen>
+    <dimen name="ui_spacing_vertical">10dip</dimen>
+</resources>

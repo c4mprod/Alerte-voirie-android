@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/page_mes_rapports_et_autour_de_vous_cadre_blanc">
+    <TextView
+        android:id="@+id/TextView_title"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:textAppearance="@style/TextBlueTitle" />
+    <TextView
+        android:id="@+id/TextView_text"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent" />
+</LinearLayout>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="select_position_title">"Nouveau rapport"</string>
+<string name="select_position_header1">"Lieu précis de l'incident"</string>
+<string name="select_position_header2">"Touchez la carte pour ajuster votre position"</string>
+<string name="select_position_btn_validate">"Valider la position"</string>
+<string name="select_position_where">"Ou ?"</string>
+
+</resources>

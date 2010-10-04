@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Main" parent="@android:style/Theme.Light">
+<!--        <item name="android:windowBackground">@drawable/accueil_fond</item>-->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:windowTitleBackgroundStyle">@style/TitleBar</item>
+        <item name="android:buttonStyle">@style/Button</item>
+    </style>
+    <style name="Splash" parent="Main">
+<!--        <item name="android:windowBackground">@drawable/splashscreen_fond</item>-->
+        <item name="android:windowNoTitle">true</item>
+    </style>
+    <style name="Home" parent="Main">
+        <item name="android:windowBackground">@drawable/fond_page_accueil</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:buttonStyle">@style/HomeButton</item>
+    </style>
+    <style name="Categories" parent="Main">
+        <item name="android:windowBackground">@drawable/fond_choix_categorie</item>
+    </style>
+    
+    <style
+        name="TitleBar"
+        parent="@android:style/TextAppearance.WindowTitle">
+        <item name="android:background">@drawable/titlebar_bg</item>
+        <item name="android:shadowColor">#bb000000</item>
+        <item name="android:shadowRadius">2.75</item>
+        <item name="android:height">25dip</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">8dip</item>
+        <item name="android:paddingRight">8dip</item>
+    </style>
+    
+    <style
+        name="Button"
+        parent="@android:style/Widget.Button">
+        <item name="android:background">@drawable/btn_bg</item>
+        <item name="android:textAppearance">@style/TextGreen</item>
+        <item name="android:textColor">@color/green_selectable</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+    
+    <style
+        name="HomeButton"
+        parent="@android:style/Widget.Button">
+        <item name="android:paddingBottom">15dip</item>
+        <item name="android:gravity">bottom|center_horizontal</item>
+        <item name="android:textAppearance">@style/TextGreen</item>
+        <item name="android:textColor">@color/green_selectable</item>
+    </style>
+    
+    <style
+        name="CategoryHeader">
+        <item name="android:textAppearance">@style/TextWhiteTitle</item>
+        <item name="android:padding">3dip</item>
+        <item name="android:background">@drawable/category_cell_bg</item>
+    </style>
+    
+    <style
+        name="TabBar"
+        parent="Main">
+<!--        <item name="android:radioButtonStyle">@style/Tab</item>    -->
+    </style>
+    
+    <style
+        name="Tab">
+        <item name="android:background">@drawable/tab</item>
+        <item name="android:textColor">@color/tab_text</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:shadowColor">#55000000</item>
+        <item name="android:shadowRadius">2.75</item>
+        <item name="android:shadowDy">2</item>
+        <item name="android:button">@null</item>
+        <item name="android:gravity">center</item>
+    </style>
+    
+    <style
+        name="ListCustom"
+        parent="@android:style/Widget.ListView">
+        <item name="android:id">@android:id/list</item>
+        <item name="android:cacheColorHint">@android:color/transparent</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:headerDividersEnabled">false</item>
+        <item name="android:divider">@drawable/separator</item>
+        <item name="android:descendantFocusability">afterDescendants</item>
+    </style>
+    
+    <style
+        name="ListElement">
+        <item name="android:padding">8dip</item>
+        <item name="android:minHeight">48dip</item>
+        <item name="android:textAppearance">@style/TextBlueTitle</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+    
+    <style
+        name="TextGreen">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style
+        name="TextBlueTitle">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/light_blue</item>
+    </style>
+    <style
+        name="TextWhiteTitle"
+        parent="TextBlueTitle">
+        <item name="android:textColor">#fff</item>
+    </style>
+    
+    
+        
+</resources>

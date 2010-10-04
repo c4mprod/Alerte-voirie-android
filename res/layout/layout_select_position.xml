@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView
+        android:text="@string/select_position_header1"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        style="@style/CategoryHeader" />
+    <TextView
+        android:text="@string/select_position_where"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:textAppearance="@style/TextBlueTitle"
+        android:paddingLeft="@dimen/ui_margin_side" />
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:paddingLeft="@dimen/ui_margin_side"
+        android:paddingRight="@dimen/ui_margin_side">
+        <EditText
+            android:id="@+id/EditText_address_number"
+            android:maxLength="4"
+            android:inputType="number"
+            android:layout_height="wrap_content"
+            android:layout_width="65dip" />
+        <TextView
+            android:id="@+id/TextView_address"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginLeft="10dip"
+            android:text="test adresse" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/Button_validate"
+        android:text="@string/select_position_btn_validate"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_marginBottom="3dip" />
+    <TextView
+        android:text="@string/select_position_header2"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        style="@style/CategoryHeader" />
+
+    <com.google.android.maps.MapView
+        android:id="@+id/MapView_map"
+        android:clickable="true"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:apiKey="@string/map_api_key" />
+
+</LinearLayout>

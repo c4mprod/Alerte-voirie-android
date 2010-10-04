@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="com.fabernovel.alertevoirie"
+      android:versionCode="1"
+      android:versionName="1.0">
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:theme="@style/Main">
+        <activity android:label="@string/app_name" android:name=".SplashScreenActivity" android:noHistory="true" android:theme="@style/Splash" android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    <activity android:name="HomeActivity" android:theme="@style/Home" android:screenOrientation="portrait"></activity>
+<activity android:name="NewsActivity" android:label="@string/news_title" android:screenOrientation="portrait"></activity>
+<activity android:theme="@style/TabBar" android:screenOrientation="portrait" android:name="MyIncidentsActivity"></activity>
+
+<activity android:label="@string/existing_incidents_title" android:name="ExistingIncidentsActivity" android:screenOrientation="portrait"></activity>
+<activity android:name="SelectCategoryActivity" android:label="@string/select_category_title" android:theme="@style/Categories" android:screenOrientation="portrait"></activity>
+<provider android:name=".data.CategoryProvider" android:authorities="com.fabernovel.alertevoirie.dataprovider.advice" android:syncable="false"></provider>
+<uses-library android:name="com.google.android.maps"></uses-library>
+<activity android:name="SelectPositionActivity" android:screenOrientation="portrait"></activity>
+<activity android:name="ReportDetailsActivity" android:screenOrientation="portrait"></activity>
+<activity android:name="AddCommentActivity" android:windowSoftInputMode="adjustResize"></activity>
+</application>
+    <uses-sdk android:minSdkVersion="3" />
+
+<uses-permission android:name="android.permission.INTERNET"></uses-permission>
+
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
+</manifest> 

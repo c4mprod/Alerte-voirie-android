@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+    <TextView
+        android:id="@+id/TextView_header"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/add_comment_header"
+        style="@style/CategoryHeader" />
+
+    <TextView
+        android:id="@+id/TextView_remaining_chars"
+        android:text="test char"
+        android:gravity="right"
+        android:paddingLeft="@dimen/ui_margin_side"
+        android:paddingRight="@dimen/ui_margin_side"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_below="@id/TextView_header" />
+
+    <Button
+        android:id="@+id/Button_validate"
+        android:text="@string/add_comment_button_validate"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
+        
+    <EditText
+        android:id="@+id/EditText_comment"
+        android:inputType="textMultiLine"
+        android:gravity="top|left"
+        android:layout_width="fill_parent"
+        android:layout_height="1dip"
+        android:layout_marginLeft="@dimen/ui_margin_side"
+        android:layout_marginRight="@dimen/ui_margin_side"
+        android:layout_marginTop="@dimen/ui_spacing_vertical"
+        android:layout_marginBottom="@dimen/ui_spacing_vertical"
+        android:layout_below="@id/TextView_remaining_chars"
+        android:layout_above="@id/Button_validate" />
+</RelativeLayout>

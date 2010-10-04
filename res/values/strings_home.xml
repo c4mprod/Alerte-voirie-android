@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="home_btn_new_incident">Nouvel incident</string>
+<string name="home_btn_incidents">Incidents</string>
+<string name="home_btn_news">Actualités</string>
+<string name="home_btn_reports">Mes rapports</string>
+</resources>
