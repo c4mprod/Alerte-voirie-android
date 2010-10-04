@@ -11,7 +11,6 @@ import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
-import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.utils.JSONAdapter;
 import com.fabernovel.alertevoirie.utils.Utils;

@@ -10,12 +10,9 @@ import org.json.JSONTokener;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
-import android.content.SharedPreferences;
 import android.content.UriMatcher;
-import android.database.AbstractCursor;
 import android.database.Cursor;
 import android.net.Uri;
-import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.util.Log;
 

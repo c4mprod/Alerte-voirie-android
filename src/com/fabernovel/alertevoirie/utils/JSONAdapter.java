@@ -4,9 +4,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.fabernovel.alertevoirie.R;
-import com.fabernovel.alertevoirie.entities.JsonData;
-
 import android.content.Context;
 import android.util.Log;
 import android.util.SparseArray;

@@ -1,8 +1,8 @@
 package com.fabernovel.alertevoirie.entities;
 
-import com.fabernovel.alertevoirie.data.CategoryProvider;
-
 import android.net.Uri;
+
+import com.fabernovel.alertevoirie.data.CategoryProvider;
 
 public interface Category {
     public static final Uri CONTENT_URI = Uri.parse("content://"+CategoryProvider.AUTHORITY+"/category");

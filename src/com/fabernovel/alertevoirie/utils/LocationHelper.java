@@ -1,8 +1,8 @@
 package com.fabernovel.alertevoirie.utils;
 
-import com.google.android.maps.GeoPoint;
-
 import android.location.Location;
+
+import com.google.android.maps.GeoPoint;
 
 public class LocationHelper {
     private static final int TWO_MINUTES = 1000 * 60 * 2;

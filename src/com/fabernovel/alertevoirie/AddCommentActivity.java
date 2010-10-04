@@ -1,17 +1,14 @@
 package com.fabernovel.alertevoirie;
 
-import com.fabernovel.alertevoirie.entities.IntentData;
-
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.TextView;
+
+import com.fabernovel.alertevoirie.entities.IntentData;
 
 public class AddCommentActivity extends Activity {
     @Override
