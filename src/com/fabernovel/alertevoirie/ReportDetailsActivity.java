@@ -6,6 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import net.londatiga.android.ActionItem;
+import net.londatiga.android.QuickAction;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,8 +51,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     private static final int    REQUEST_CATEGORY = 0;
     private static final int    REQUEST_POSITION = 1;
     private static final int    REQUEST_COMMENT  = 2;
+    private static final int    REQUEST_DETAILS  = 3;
 
     private static final int    DIALOG_PROGRESS  = 0;
+    private boolean             hasPic;
 
     private Uri                 uriOfPicFromCamera;
 
@@ -72,24 +77,56 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         findViewById(R.id.LinearLayout_where).setOnClickListener(this);
         findViewById(R.id.LinearLayout_comment).setOnClickListener(this);
         findViewById(R.id.Button_validate).setOnClickListener(this);
+
+        if (getIntent().getLongExtra(IntentData.EXTRA_CATEGORY_ID, -1) != -1) {
+            setCategory(getIntent());
+            startActivityForResult(new Intent(this, SelectPositionActivity.class), REQUEST_POSITION);
+        }
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.ImageView_far:
             case R.id.ImageView_close:
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                File tmpFile = null;
-                try {
-                    tmpFile = File.createTempFile("capture", "tmp");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                uriOfPicFromCamera = Uri.fromFile(tmpFile);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, uriOfPicFromCamera);
+                takePicture(v);
+                break;
+            case R.id.ImageView_far:
 
-                startActivityForResult(intent, v.getId());
+                if (hasPic) {
+                    final ActionItem actionNew = new ActionItem();
+                    final ActionItem actionModif = new ActionItem();
+                    final View button = v;
+
+                    actionNew.setTitle("Nouvelle image");
+                    // chart.setIcon(getResources().getDrawable(R.drawable.chart));
+                    actionNew.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            takePicture(button);
+                        }
+                    });
+
+                    actionModif.setTitle("Préciser l'anomalie");
+                    // production.setIcon(getResources().getDrawable(R.drawable.production));
+                    actionModif.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            loadZoom();
+
+                        }
+                    });
+
+                    QuickAction qa = new QuickAction(findViewById(R.id.AnchorZoom));
+
+                    qa.addActionItem(actionNew);
+                    qa.addActionItem(actionModif);
+                    qa.setAnimStyle(QuickAction.ANIM_AUTO);
+
+                    qa.show();
+                } else {
+                    takePicture(v);
+                }
+
                 break;
 
             case R.id.LinearLayout_category:
@@ -109,6 +146,28 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             default:
                 break;
         }
+    }
+
+    protected void loadZoom() {
+        Intent i = new Intent(ReportDetailsActivity.this, SelectZoomDetail.class);
+        
+        startActivityForResult(i, REQUEST_DETAILS);
+        
+    }
+
+    private void takePicture(View v) {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        File tmpFile = null;
+        try {
+            tmpFile = File.createTempFile("capture", "tmp");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        uriOfPicFromCamera = Uri.fromFile(tmpFile);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uriOfPicFromCamera);
+
+        startActivityForResult(intent, v.getId());
+
     }
 
     @Override
@@ -161,28 +220,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
             case REQUEST_CATEGORY:
                 if (resultCode == RESULT_OK) {
-                    String subCategories = EMPTY_STRING, category = EMPTY_STRING;
-                    long catId = data.getLongExtra(IntentData.EXTRA_CATEGORY_ID, 0);
-                    currentIncident.categoryId = catId;
-
-                    do {
-                        Cursor c = getContentResolver().query(ContentUris.withAppendedId(Category.CONTENT_URI, catId),
-                                                              new String[] { Category.PARENT, Category.NAME }, null, null, null);
-
-                        if (c.moveToFirst()) {
-                            catId = c.getInt(c.getColumnIndex(Category.PARENT));
-                            if (catId != 0) {
-                                subCategories = c.getString(c.getColumnIndex(Category.NAME))
-                                                + (subCategories.length() > 0 ? ", " + subCategories : EMPTY_STRING);
-                            } else {
-                                category = c.getString(c.getColumnIndex(Category.NAME));
-                            }
-                        }
-                        c.close();
-                    } while (catId > 0);
-
-                    ((TextView) findViewById(R.id.TextView_sub_categories)).setText(subCategories);
-                    ((TextView) findViewById(R.id.TextView_main_category)).setText(category);
+                    setCategory(data);
 
                 }
                 break;
@@ -205,8 +243,34 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         }
     }
 
+    private void setCategory(Intent data) {
+        String subCategories = EMPTY_STRING, category = EMPTY_STRING;
+        long catId = data.getLongExtra(IntentData.EXTRA_CATEGORY_ID, 0);
+        currentIncident.categoryId = catId;
+
+        do {
+            Cursor c = getContentResolver().query(ContentUris.withAppendedId(Category.CONTENT_URI, catId), new String[] { Category.PARENT, Category.NAME },
+                                                  null, null, null);
+
+            if (c.moveToFirst()) {
+                catId = c.getInt(c.getColumnIndex(Category.PARENT));
+                if (catId != 0) {
+                    subCategories = c.getString(c.getColumnIndex(Category.NAME)) + (subCategories.length() > 0 ? ", " + subCategories : EMPTY_STRING);
+                } else {
+                    category = c.getString(c.getColumnIndex(Category.NAME));
+                }
+            }
+            c.close();
+        } while (catId > 0);
+
+        ((TextView) findViewById(R.id.TextView_sub_categories)).setText(subCategories);
+        ((TextView) findViewById(R.id.TextView_main_category)).setText(category);
+
+    }
+
     private void setPictureToImageView(String pictureName, ImageView imageView) {
         Bitmap picture = null;
+
         try {
             InputStream in = openFileInput(pictureName);
             picture = BitmapFactory.decodeStream(in);
@@ -222,6 +286,13 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
             d.setDrawableByLayerId(R.id.picture, new BitmapDrawable(picture));
             imageView.setImageDrawable(d);
+
+            if (!hasPic) hasPic = (imageView.getId() == R.id.ImageView_far);
+            
+            if(hasPic)
+            {
+                loadZoom();
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -261,14 +332,14 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 JSONObject answer = new JSONArray((String) result).getJSONObject(0);
                 if (JsonData.VALUE_REQUEST_NEW_INCIDENT.equals(answer.getString(JsonData.PARAM_REQUEST))
                     && JsonData.VALUE_INCIDENT_SAVED.equals(answer.getJSONObject(JsonData.PARAM_ANSWER).get(JsonData.PARAM_STATUS))) {
-                
-                    //TODO do something
+
+                    // TODO do something
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-        
+
         dismissDialog(DIALOG_PROGRESS);
     }
 

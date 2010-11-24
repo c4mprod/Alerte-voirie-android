@@ -6,12 +6,14 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.BaseColumns;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 import com.fabernovel.alertevoirie.entities.Category;
+import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.IntentData;
 
 public class SelectCategoryActivity extends ListActivity {
@@ -35,6 +37,7 @@ public class SelectCategoryActivity extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {
         categoryCursor.moveToPosition(position);
 
+        Log.d(Constants.PROJECT_TAG, "setResult? " + categoryCursor.isNull(categoryCursor.getColumnIndex(Category.CHILDREN)));
         if (categoryCursor.isNull(categoryCursor.getColumnIndex(Category.CHILDREN))) {
             Intent result = new Intent();
             result.putExtra(IntentData.EXTRA_CATEGORY_ID, id);

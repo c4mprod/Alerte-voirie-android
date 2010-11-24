@@ -1,6 +1,10 @@
 package com.fabernovel.alertevoirie.webservice;
 
 public class AVServiceErrorException extends Exception {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 8338905716824467752L;
     int errorCode;
 
     public AVServiceErrorException(int code) {

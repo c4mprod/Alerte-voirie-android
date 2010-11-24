@@ -9,7 +9,7 @@ import android.telephony.TelephonyManager;
 
 public class Utils {
     public static String getUdid(Context c) {
-        TelephonyManager tel = (TelephonyManager) c.getSystemService(c.TELEPHONY_SERVICE);
+        TelephonyManager tel = (TelephonyManager) c.getSystemService(Context.TELEPHONY_SERVICE);
         return tel.getDeviceId();
     }
     

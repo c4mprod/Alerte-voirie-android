@@ -4,6 +4,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.fabernovel.alertevoirie.entities.Constants;
+
 import android.content.Context;
 import android.util.Log;
 import android.util.SparseArray;
@@ -51,7 +53,7 @@ public class JSONAdapter extends BaseAdapter {
         for (int i = 0, j = 0; i < data.length(); i++, j++) {
             String cat = getCategoryOfItem(i);
             if (!cat.equals(currentCat)) {
-                Log.d("Alerte Voirie", "category " + j + " : " + cat);
+                Log.d(Constants.PROJECT_TAG, "category " + j + " : " + cat);
                 categories.put(j++, cat);
                 currentCat = cat;
             }
@@ -69,8 +71,11 @@ public class JSONAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        Log.d("Alerte Voirie", "get count = "+data.length());
-        return data.length() + (categories == null ? 0 : categories.size());
+        if (data != null) {
+            Log.d(Constants.PROJECT_TAG, "get count = " + data.length());
+            return data.length() + (categories == null ? 0 : categories.size());
+        } else
+            return 0;
     }
 
     @Override
@@ -108,7 +113,7 @@ public class JSONAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         switch (getItemViewType(position)) {
             case TYPE_ITEM:
-                Log.d("Alerte Voirie", "get item number "+position);
+                Log.d(Constants.PROJECT_TAG, "get item number " + position);
                 View v;
                 View[] subViews;
                 if (convertView != null) {
@@ -159,7 +164,7 @@ public class JSONAdapter extends BaseAdapter {
         for (; i <= position && i < categories.size(); i++) {
             if (categories.keyAt(i) >= position) break;
         }
-        Log.d("Alerte Voirie", "category for position " + position + " = " + (i - 1));
+        Log.d(Constants.PROJECT_TAG, "category for position " + position + " = " + (i - 1));
         return i - 1;
     }
 }

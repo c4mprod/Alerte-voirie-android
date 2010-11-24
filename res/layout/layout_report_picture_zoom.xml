@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_height="fill_parent"
+		android:layout_width="fill_parent" android:id="@+id/FrameLayout_report_picture">
+
+		<ImageView
+				android:id="@+id/ImageViewPictoBG"
+				android:layout_gravity="center_vertical|center_horizontal"
+				style="@style/Button" android:layout_height="wrap_content" android:layout_width="wrap_content" android:adjustViewBounds="true"></ImageView>
+		<com.fabernovel.alertevoirie.entities.PictoView
+				android:id="@+id/ViewPicto"
+				android:src="@drawable/big_arrow"
+				android:clickable="false"
+				android:layout_width="fill_parent"
+				android:layout_height="fill_parent"
+				android:scaleType="center"></com.fabernovel.alertevoirie.entities.PictoView>
+
+		<Button
+				android:id="@+id/ButtonViewPicto"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="bottom|right"
+				android:text="ok"
+				style="@style/Button"
+				android:layout_margin="10dip"></Button>
+
+</FrameLayout>

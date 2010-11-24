@@ -13,11 +13,14 @@ import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 
+import com.fabernovel.alertevoirie.entities.Constants;
+import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.utils.JSONAdapter;
 import com.fabernovel.alertevoirie.utils.Utils;
@@ -39,7 +42,8 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                                                  .put(JsonData.PARAM_UDID, Utils.getUdid(this))
                                                  .put(JsonData.PARAM_RADIUS, JsonData.VALUE_RADIUS_CLOSE)
                                                  .put(JsonData.PARAM_POSITION,
-                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, "5.36628").put(JsonData.PARAM_POSITION_LATITUDE, "43.30957"));
+                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, "5.36628").put(JsonData.PARAM_POSITION_LATITUDE,
+                                                                                                                             "43.30957"));
 
             AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
 
@@ -54,7 +58,7 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
         findViewById(R.id.Button_validate).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(ExistingIncidentsActivity.this, SelectCategoryActivity.class));
+                startActivityForResult(new Intent(ExistingIncidentsActivity.this, SelectCategoryActivity.class), 0);
             }
         });
     }
@@ -109,6 +113,19 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
         dismissDialog(DIALOG_PROGRESS);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            if (getIntent().getBooleanExtra(Constants.NEW_REPORT, false)) {
+                Intent i = new Intent(this, ReportDetailsActivity.class);
+                i.putExtra(IntentData.EXTRA_CATEGORY_ID, data.getLongExtra(IntentData.EXTRA_CATEGORY_ID, -1));
+                startActivity(i);
+            }
+            Log.d(Constants.PROJECT_TAG, "Result: " + data.getLongExtra(IntentData.EXTRA_CATEGORY_ID, -1));
+            finish();
+        }
+    }
+
     class MagicAdapter extends JSONAdapter {
         public MagicAdapter(Context context, JSONArray data, int cellLayout, String[] from, int[] to, String jsonObjectName) {
             super(context, data, cellLayout, from, to, jsonObjectName);
@@ -128,4 +145,5 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
             return v;
         }
     }
+
 }

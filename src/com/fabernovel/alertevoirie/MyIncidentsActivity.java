@@ -11,6 +11,7 @@ import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
+import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.utils.JSONAdapter;
 import com.fabernovel.alertevoirie.utils.Utils;
@@ -18,7 +19,7 @@ import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
 
 public class MyIncidentsActivity extends ListActivity implements RequestListener {
-    private static final int     DIALOG_PROGRESS = 0;
+    
 
     public static final String[] INCIDENTS       = new String[] { JsonData.PARAM_ONGOING_INCIDENTS, JsonData.PARAM_UPDATED_INCIDENTS,
             JsonData.PARAM_RESOLVED_INCIDENTS   };
@@ -47,7 +48,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
         tabs.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                Log.d("Alerte Voirie", "checked : " + checkedId);
+                Log.d(Constants.PROJECT_TAG, "checked : " + checkedId);
                 setAdapterForTab(gettabIndex(checkedId));
             }
         });
@@ -69,12 +70,12 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
 
     @Override
     public void onRequestcompleted(int requestCode, Object result) {
-        Log.d("Alerte Voirie", "result = " + result);
+        Log.d(Constants.PROJECT_TAG, "result = " + result);
         if (requestCode == AVService.REQUEST_JSON && result != null) {
             try {
                 JSONObject answer = new JSONArray((String) result).getJSONObject(0);
 
-                Log.d("Alerte Voirie", "answer = " + answer);
+                Log.d(Constants.PROJECT_TAG, "answer = " + answer);
 
                 /*
                  * 10-01 18:25:27.116: DEBUG/Alerte Voirie(24267): result =
@@ -100,7 +101,8 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
                     for (int i = 0; i < data.length; i++) {
                         ((TextView) tabs.getChildAt(i)).setText(answer.getString(INCIDENTS[i]));
                         data[i] = answer.getJSONObject(JsonData.PARAM_INCIDENTS).getJSONArray(INCIDENTS[i]);
-                        Log.d("Alerte Voirie", "data : " + INCIDENTS[i] + " : " + data[i].length());
+                        Log.d(Constants.PROJECT_TAG, "data : " + INCIDENTS[i] + " : " + data[i].length());
+
                     }
                 }
             } catch (JSONException e) {
@@ -114,7 +116,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
     }
 
     private void setAdapterForTab(int tab) {
-        Log.d("Alerte Voirie", "data " + data[tab].length());
+        // Log.d(Constants.PROJECT_TAG, "data " + data[tab].length());
 
         setListAdapter(new JSONAdapter(this, data[tab], R.layout.cell_report_noicon, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
                 JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, JsonData.PARAM_INCIDENT_OBJECT) {

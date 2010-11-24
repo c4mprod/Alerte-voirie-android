@@ -17,6 +17,7 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.fabernovel.alertevoirie.R;
+import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.utils.JSONCursor;
 
@@ -87,7 +88,7 @@ public class CategoryProvider extends ContentProvider {
                 case CATEGORY_ID:
                     categoryId = uri.getLastPathSegment();
                     array.put(categories.getJSONObject(categoryId));
-                    Log.d("Alerte Voirie", "category returned = "+categories.getJSONObject(categoryId));
+                    Log.d(Constants.PROJECT_TAG, "category returned = "+categories.getJSONObject(categoryId));
                     break;
 
                 default:

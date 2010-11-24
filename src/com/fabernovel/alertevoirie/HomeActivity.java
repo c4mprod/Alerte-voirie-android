@@ -1,5 +1,7 @@
 package com.fabernovel.alertevoirie;
 
+import com.fabernovel.alertevoirie.entities.Constants;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,15 +24,17 @@ public class HomeActivity extends Activity implements OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.Button_news:
-//                startActivity(new Intent(this, NewsActivity.class));
-                startActivity(new Intent(this, ExistingIncidentsActivity.class));
+                startActivity(new Intent(this, NewsActivity.class));
+//                startActivity(new Intent(this, ExistingIncidentsActivity.class));
                 break;
             case R.id.Button_reports:
                 startActivity(new Intent(this, MyIncidentsActivity.class));
                 break;
             case R.id.Button_new_incident:
-//                startActivity(new Intent(this, ExistingIncidentsActivity.class));
-                startActivity(new Intent(this, ReportDetailsActivity.class));
+                Intent i = new Intent(this, ExistingIncidentsActivity.class);
+                i.putExtra(Constants.NEW_REPORT, true);
+                startActivity(i);
+                //startActivity(new Intent(this, ReportDetailsActivity.class));
                 break;
 
             default:

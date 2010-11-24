@@ -1,56 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-    android:layout_height="fill_parent"
-    android:layout_width="fill_parent"
-    android:orientation="vertical"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-    <TextView
-        android:text="@string/select_position_header1"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        style="@style/CategoryHeader" />
-    <TextView
-        android:text="@string/select_position_where"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:textAppearance="@style/TextBlueTitle"
-        android:paddingLeft="@dimen/ui_margin_side" />
-    <LinearLayout
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:paddingLeft="@dimen/ui_margin_side"
-        android:paddingRight="@dimen/ui_margin_side">
-        <EditText
-            android:id="@+id/EditText_address_number"
-            android:maxLength="4"
-            android:inputType="number"
-            android:layout_height="wrap_content"
-            android:layout_width="65dip" />
-        <TextView
-            android:id="@+id/TextView_address"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_marginLeft="10dip"
-            android:text="test adresse" />
-    </LinearLayout>
+		android:layout_height="fill_parent"
+		android:layout_width="fill_parent"
+		android:orientation="vertical"
+		xmlns:android="http://schemas.android.com/apk/res/android">
+		<TextView
+				android:text="@string/select_position_header1"
+				android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				style="@style/CategoryHeader" />
+		<TextView
+				android:text="@string/select_position_where"
+				android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:textAppearance="@style/TextBlueTitle"
+				android:paddingLeft="@dimen/ui_margin_side" />
+		<RelativeLayout
+				android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:paddingLeft="@dimen/ui_margin_side"
+				android:paddingRight="@dimen/ui_margin_side">
+				<EditText
+						android:id="@+id/EditText_address_number"
+						android:layout_height="wrap_content"
+						android:text="@string/address_number"
+						android:inputType="phone"
+						android:hint="@string/address_number_hint"
+						android:textStyle="bold"
+						android:layout_width="80dip"
+						android:maxLines="1"
+						android:nextFocusRight="@+id/EditText_address_street"
+						android:nextFocusDown="@+id/EditText_address_postcode"
+						android:nextFocusLeft="@+id/EditText_address_town"
+						android:nextFocusUp="@+id/EditText_address_town"
+						android:imeOptions="actionNext" android:singleLine="true"/>
+				<EditText
+						android:layout_height="wrap_content"
+						android:id="@+id/EditText_address_street"
+						android:layout_toRightOf="@+id/EditText_address_number"
+						android:layout_width="fill_parent"
+						android:text="@string/address_street"
+						android:hint="@string/address_street_hint"
+						android:textStyle="bold"
+						android:maxLines="1"
+						android:nextFocusUp="@+id/EditText_address_town"
+						android:nextFocusDown="@+id/EditText_address_town"
+						android:nextFocusRight="@+id/EditText_address_postcode"
+						android:nextFocusLeft="@+id/EditText_address_number"
+						android:imeOptions="actionNext" android:singleLine="true">
+						</EditText>
+				<EditText
+						android:layout_height="wrap_content"
+						android:layout_below="@+id/EditText_address_number"
+						android:id="@+id/EditText_address_postcode"
+						android:text="@string/address_postcode"
+						android:inputType="phone"
+						android:hint="@string/address_postcode_hint"
+						android:textStyle="bold"
+						android:layout_width="80dip"
+						android:maxLines="1"
+						android:nextFocusLeft="@+id/EditText_address_street"
+						android:nextFocusRight="@+id/EditText_address_town"
+						android:nextFocusUp="@+id/EditText_address_number"
+						android:nextFocusDown="@+id/EditText_address_number"
+						android:imeOptions="actionNext" android:singleLine="true"></EditText>
+				<EditText
+						android:layout_toRightOf="@+id/EditText_address_postcode"
+						android:layout_height="wrap_content"
+						android:layout_below="@+id/EditText_address_number"
+						android:layout_width="fill_parent"
+						android:text="@string/address_town"
+						android:hint="@string/address_town_hint"
+						android:textStyle="bold"
+						android:id="@+id/EditText_address_town"
+						android:maxLines="1"
+						android:nextFocusDown="@+id/EditText_address_number"
+						android:nextFocusLeft="@+id/EditText_address_postcode"
+						android:nextFocusRight="@+id/EditText_address_number"
+						android:nextFocusUp="@+id/EditText_address_town"
+						android:imeOptions="actionNext" android:singleLine="true"></EditText>
 
-    <Button
-        android:id="@+id/Button_validate"
-        android:text="@string/select_position_btn_validate"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:layout_marginBottom="3dip" />
-    <TextView
-        android:text="@string/select_position_header2"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        style="@style/CategoryHeader" />
 
-    <com.google.android.maps.MapView
-        android:id="@+id/MapView_map"
-        android:clickable="true"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:apiKey="@string/map_api_key" />
+
+
+		</RelativeLayout>
+
+		<Button
+				android:id="@+id/Button_validate"
+				android:text="@string/select_position_btn_validate"
+				android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:layout_marginBottom="3dip" />
+		<TextView
+				android:text="@string/select_position_header2"
+				android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				style="@style/CategoryHeader" />
+
+		<com.google.android.maps.MapView
+				android:id="@+id/MapView_map"
+				android:clickable="true"
+				android:layout_width="fill_parent"
+				android:layout_height="fill_parent"
+				android:apiKey="@string/map_api_key" />
 
 </LinearLayout>

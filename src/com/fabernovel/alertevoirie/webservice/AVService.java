@@ -5,11 +5,13 @@ import org.json.JSONArray;
 import android.content.Context;
 import android.os.AsyncTask;
 
+@SuppressWarnings("unused")
 public class AVService {
     public static final int REQUEST_ERROR = 0;
     public static final int REQUEST_JSON = 1;
     
-    private static final String AV_URL_PREPROD = "http://alerte-voirie.ppd.c4mprod.com/api/";
+    private static final String AV_URL_PREPROD = "http://www.alertevoirie.com/api/";
+    
     private static final String AV_URL_PROD = "http://alerte-voirie.c4mprod.com/api/";
     private static final String URL_TEST = "http://test.dev.playtomo.com/tools/testpost.php";
     

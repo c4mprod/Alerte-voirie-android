@@ -1,9 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<string name="select_position_title">"Nouveau rapport"</string>
-<string name="select_position_header1">"Lieu précis de l'incident"</string>
-<string name="select_position_header2">"Touchez la carte pour ajuster votre position"</string>
-<string name="select_position_btn_validate">"Valider la position"</string>
-<string name="select_position_where">"Ou ?"</string>
+
+		<string
+				name="select_position_title">"Nouveau rapport"</string>
+		<string
+				name="select_position_header1">"Lieu précis de l'incident"</string>
+		<string
+				name="select_position_header2">"Touchez la carte pour ajuster votre position"</string>
+		<string
+				name="select_position_btn_validate">"Valider la position"</string>
+		<string
+				name="select_position_where">"Où ?"</string>
+
+		<string
+				name="address_town"></string>
+		<string
+				name="address_postcode"></string>
+		<string
+				name="address_number"></string>
+		<string
+				name="address_street"></string>
+
+		<string
+				name="address_number_hint">n°</string>
+		<string
+				name="address_town_hint">Ville</string>
+		<string
+				name="address_street_hint">Rue</string>
+		<string
+				name="address_postcode_hint">CP</string>
+
+		<string
+				name="address_search">Rechercher</string>
+
 
 </resources>

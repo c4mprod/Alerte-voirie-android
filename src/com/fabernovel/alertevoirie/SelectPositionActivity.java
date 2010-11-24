@@ -15,10 +15,14 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
+import android.widget.Button;
 import android.widget.TextView;
 
+import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.utils.LocationHelper;
 import com.fabernovel.alertevoirie.utils.SimpleItemizedOverlay;
@@ -32,6 +36,8 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     private MapView         map;
     private LocationManager locationManager;
     private GeoPoint        currentPoint;
+    private Geocoder        geo;
+    private boolean         search              = false;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -42,20 +48,45 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
         findViewById(R.id.Button_validate).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                String address = ((TextView) findViewById(R.id.EditText_address_number)).getText().toString()
-                                 + ((TextView) findViewById(R.id.TextView_address)).getText().toString();
-                Intent result = new Intent();
-                result.putExtra(IntentData.EXTRA_ADDRESS, address);
-                result.putExtra(IntentData.EXTRA_LONGITUDE, (double) currentPoint.getLongitudeE6()/1E6);
-                result.putExtra(IntentData.EXTRA_LATITUDE, (double) currentPoint.getLatitudeE6()/1E6);
-                setResult(RESULT_OK, result);
-                finish();
+                if (search) {
+                    new AddressGetter().execute();
+                } else {
+
+                    String address = ((TextView) findViewById(R.id.EditText_address_number)).getText().toString() + " "
+                                     + ((TextView) findViewById(R.id.EditText_address_street)).getText().toString() + " ("
+                                     + ((TextView) findViewById(R.id.EditText_address_town)).getText().toString() + ")";
+                    Intent result = new Intent();
+                    result.putExtra(IntentData.EXTRA_ADDRESS, address);
+                    result.putExtra(IntentData.EXTRA_LONGITUDE, (double) currentPoint.getLongitudeE6() / 1E6);
+                    result.putExtra(IntentData.EXTRA_LATITUDE, (double) currentPoint.getLatitudeE6() / 1E6);
+                    setResult(RESULT_OK, result);
+                    finish();
+                }
             }
         });
+
+        OnFocusChangeListener ofc = new OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                enableSearch();
+
+            }
+        };
+
+        ((TextView) findViewById(R.id.EditText_address_number)).setOnFocusChangeListener(ofc);
+        ((TextView) findViewById(R.id.EditText_address_street)).setOnFocusChangeListener(ofc);
+        ((TextView) findViewById(R.id.EditText_address_postcode)).setOnFocusChangeListener(ofc);
+        ((TextView) findViewById(R.id.EditText_address_town)).setOnFocusChangeListener(ofc);
+
+        geo = new Geocoder(this);
 
         map = (MapView) findViewById(R.id.MapView_map);
         map.setBuiltInZoomControls(true);
         map.getController().setZoom(18);
+        map.setSatellite(true);
+
+        findViewById(R.id.Button_validate).setEnabled(false);
 
         // Acquire a reference to the system Location Manager
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -70,6 +101,12 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
         if (currentBestLocation != null) {
             handleNewLocation(currentBestLocation);
         }
+    }
+
+    protected void enableSearch() {
+        ((Button) findViewById(R.id.Button_validate)).setText(R.string.address_search);
+        findViewById(R.id.Button_validate).setEnabled(true);
+        search = true;
     }
 
     public void onLocationChanged(Location location) {
@@ -102,6 +139,7 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     }
 
     private void setMarker(GeoPoint newGeo) {
+
         map.getOverlays().clear();
         CursorOveray cursor = new CursorOveray(getResources().getDrawable(R.drawable.map_cursor));
         cursor.addOverlayItem(new OverlayItem(newGeo, null, null));
@@ -109,9 +147,10 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
         map.invalidate();
         currentPoint = newGeo;
 
-        ((TextView) findViewById(R.id.TextView_address)).setText(null);
+        // ((TextView) findViewById(R.id.TextView_address)).setText(null);
         ((TextView) findViewById(R.id.EditText_address_number)).setText(null);
-        new AddressGetter().execute((double) newGeo.getLatitudeE6() / 1E6, (double) newGeo.getLongitudeE6() / 1E6);
+        Log.d(Constants.PROJECT_TAG, "Position: " + (double) newGeo.getLatitudeE6() / 1E6 + " / " + (double) newGeo.getLongitudeE6() / 1E6);
+        if (!search) new AddressGetter().execute((double) newGeo.getLatitudeE6() / 1E6, (double) newGeo.getLongitudeE6() / 1E6);
     }
 
     @Override
@@ -135,14 +174,33 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     }
 
     private class AddressGetter extends AsyncTask<Double, Void, String[]> {
+        
+        protected GeoPoint geopoint;
         @Override
         protected String[] doInBackground(Double... params) {
-            Geocoder geo = new Geocoder(SelectPositionActivity.this);
-            String[] result = new String[2];
+
+            String[] result = new String[4];
             try {
-                List<Address> addr = geo.getFromLocation(params[0], params[1], 1);
+                List<Address> addr;
+
+                if (!search) {
+                    addr = geo.getFromLocation(params[0], params[1], 1);
+                } else {
+                    String address = ((TextView) findViewById(R.id.EditText_address_number)).getText().toString() + " "
+                                     + ((TextView) findViewById(R.id.EditText_address_street)).getText().toString() + " , "
+                                     + ((TextView) findViewById(R.id.EditText_address_town)).getText().toString();
+                    addr = geo.getFromLocationName(address, 1);
+
+                    if (addr.size() > 0) {
+                        geopoint = new GeoPoint((int) (addr.get(0).getLatitude() * 1E6), (int) (addr.get(0).getLongitude() * 1E6));
+                        
+                    }
+                }
+
                 if (addr.size() > 0) {
                     result[0] = addr.get(0).getAddressLine(0);
+                    result[3] = addr.get(0).getLocality();
+                    result[2] = addr.get(0).getPostalCode();
 
                     Pattern p = Pattern.compile("^[\\d\\-]+");
                     Matcher m = p.matcher(result[0]);
@@ -152,23 +210,52 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(Constants.PROJECT_TAG, "Address error", e);
             }
             return result;
         }
 
         @Override
         protected void onPostExecute(String[] result) {
-            if (result[0] != null) {
-                ((TextView) findViewById(R.id.TextView_address)).setText(result[0]);
+            
+            if(geopoint!=null)
+            {
+                setMarker(geopoint);
+                map.getController().animateTo(geopoint);
+                geopoint = null;
             }
+            
+            Log.d(Constants.PROJECT_TAG, "n° : " + result[0]);
+            Log.d(Constants.PROJECT_TAG, "Rue : " + result[1]);
+            if (result[2] != null) {
 
-            if (result[1] != null) {
-                ((TextView) findViewById(R.id.EditText_address_number)).setText(result[1]);
+                String number, street, postcode, town;
+
+                number = result[2].equals(result[1]) ? "" : result[1];
+                street = (result[3]).equals(new String(result[0]).trim()) ? "" : result[0].trim();
+                postcode = result[2];
+                town = result[3];
+
+                ((TextView) findViewById(R.id.EditText_address_street)).setText(street != null ? street : "");
+                ((TextView) findViewById(R.id.EditText_address_number)).setText(number != null ? number : "");
+                ((TextView) findViewById(R.id.EditText_address_postcode)).setText(postcode);
+                ((TextView) findViewById(R.id.EditText_address_town)).setText(town);
+
+                Log.d(Constants.PROJECT_TAG, "Number : " + number);
+                Log.d(Constants.PROJECT_TAG, "Street : " + street);
+                Log.d(Constants.PROJECT_TAG, "Postcode : " + postcode);
+                Log.d(Constants.PROJECT_TAG, "Town : " + town);
+
+                ((Button) findViewById(R.id.Button_validate)).setText(R.string.select_position_btn_validate);
+                search = false;
+
+                if (!((TextView) findViewById(R.id.EditText_address_street)).getText().toString().equals("")
+                    && !((TextView) findViewById(R.id.EditText_address_postcode)).getText().toString().equals("")
+                    && !((TextView) findViewById(R.id.EditText_address_town)).getText().toString().equals("")) {
+                    findViewById(R.id.Button_validate).setEnabled(true);
+                } else
+                    findViewById(R.id.Button_validate).setEnabled(false);
             }
-
         }
-
     }
-
 }

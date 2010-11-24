@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 
+import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.utils.JSONAdapter;
 import com.fabernovel.alertevoirie.utils.Utils;
@@ -83,7 +84,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
     @Override
     public void onRequestcompleted(int requestCode, Object result) {
-        Log.d("Alerte Voirie", "resp : " + result);
+        Log.d(Constants.PROJECT_TAG, "resp : " + result);
 
 //@formatter:off
 /**
