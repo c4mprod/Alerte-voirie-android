@@ -61,7 +61,7 @@ public class LocationHelper {
         return provider1.equals(provider2);
     }
     
-    public static GeoPoint geoFromLocation(Location l) {
+    public static GeoPoint geoFromLocation(Location l) throws NullPointerException{
         return new GeoPoint((int)(l.getLatitude()*1E6), (int)(l.getLongitude()*1E6));
     }
 }

@@ -2,4 +2,7 @@
 <resources>
     
     <string name="app_name">Alerte Voirie</string>
+    <string name="server_error">"Erreur de connexion, veuillez essayer à nouveau"</string>
+    <string name="gps_error">"Erreur de géolocalisation, temps de recherche dépassé"</string>
+    
 </resources>

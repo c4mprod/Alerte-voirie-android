@@ -4,6 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.fabernovel.alertevoirie.utils.Utils;
 
@@ -27,13 +28,13 @@ public class Incident {
             return new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_NEW_INCIDENT)
                                    .put(JsonData.PARAM_UDID, Utils.getUdid(c))
                                    .put(JsonData.PARAM_INCIDENT,
-                                        new JSONObject().put(JsonData.PARAM_INCIDENT_ADDRESS, address)
-                                                        .put(JsonData.PARAM_INCIDENT_CATEGORY, categoryId)
+                                        new JSONObject().put(JsonData.PARAM_INCIDENT_CATEGORY, categoryId)
+                                                        .put(JsonData.PARAM_INCIDENT_ADDRESS, address)
                                                         .put(JsonData.PARAM_INCIDENT_DESCRIPTION, description))
                                    .put(JsonData.PARAM_POSITION,
                                         new JSONObject().put(JsonData.PARAM_POSITION_LATITUDE, latitude).put(JsonData.PARAM_POSITION_LONGITUDE, longitude));
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(Constants.PROJECT_TAG,"Error creating new incident",e);
             return null;
         }
     }

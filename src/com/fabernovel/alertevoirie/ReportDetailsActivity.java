@@ -1,6 +1,7 @@
 package com.fabernovel.alertevoirie;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -31,34 +32,45 @@ import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.fabernovel.alertevoirie.entities.Category;
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.entities.JsonData;
+import com.fabernovel.alertevoirie.utils.Utils;
 import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
 
 public class ReportDetailsActivity extends Activity implements OnClickListener, RequestListener {
-    private static final String EMPTY_STRING     = "";
+    private static final String EMPTY_STRING                = "";
 
-    private static final int    REQUEST_CATEGORY = 0;
-    private static final int    REQUEST_POSITION = 1;
-    private static final int    REQUEST_COMMENT  = 2;
-    private static final int    REQUEST_DETAILS  = 3;
+    private static final int    REQUEST_CATEGORY            = 0;
+    private static final int    REQUEST_POSITION            = 1;
+    private static final int    REQUEST_COMMENT             = 2;
+    private static final int    REQUEST_DETAILS             = 3;
 
-    private static final int    DIALOG_PROGRESS  = 0;
+    public static final String  CAPTURE_FAR                 = "capture_far.jpg";
+    public static final String  CAPTURE_CLOSE               = "capture_close.jpg";
+    public static final String  CAPTURE_ARROW               = "arrowed.jpg";
+
+    private static final int    DIALOG_PROGRESS             = 0;
+
+    private static final int    REQUEST_COMMENT_BEFORE_EXIT = 4;
     private boolean             hasPic;
 
     private Uri                 uriOfPicFromCamera;
 
-    private Incident            currentIncident  = new Incident();
+    private Incident            currentIncident             = new Incident();
+
+    private String              img_comment                 = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,23 +148,34 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 startActivityForResult(new Intent(this, SelectPositionActivity.class), REQUEST_POSITION);
                 break;
             case R.id.LinearLayout_comment:
-                Intent intent2 = new Intent(this, AddCommentActivity.class);
-                intent2.putExtra(IntentData.EXTRA_COMMENT, ((TextView) findViewById(R.id.TextView_comment)).getText().toString());
-                startActivityForResult(intent2, REQUEST_COMMENT);
+                loadComment(REQUEST_COMMENT);
                 break;
 
             case R.id.Button_validate:
-                postNewIncident();
+
+                loadComment(REQUEST_COMMENT_BEFORE_EXIT);
             default:
                 break;
         }
     }
 
+    private void loadComment(int what) {
+
+        if (what == REQUEST_COMMENT_BEFORE_EXIT && ((TextView) findViewById(R.id.TextView_comment)).getText().toString().length() > 0) {
+            postNewIncident();
+        } else {
+            Intent intent2 = new Intent(this, AddCommentActivity.class);
+            intent2.putExtra(IntentData.EXTRA_COMMENT, ((TextView) findViewById(R.id.TextView_comment)).getText().toString());
+            startActivityForResult(intent2, what);
+        }
+
+    }
+
     protected void loadZoom() {
         Intent i = new Intent(ReportDetailsActivity.this, SelectZoomDetail.class);
-        
+        i.putExtra("comment", img_comment);
         startActivityForResult(i, REQUEST_DETAILS);
-        
+
     }
 
     private void takePicture(View v) {
@@ -173,6 +196,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.d(Constants.PROJECT_TAG, "Result : " + requestCode);
         switch (requestCode) {
             case R.id.ImageView_far:
             case R.id.ImageView_close:
@@ -191,10 +215,13 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         Bitmap picture = BitmapFactory.decodeStream(in, null, opt);
                         in.close();
 
+                        File f = new File(uriOfPicFromCamera.getPath());
+                        f.delete();
+
                         // save the new image
-                        String pictureName = requestCode == R.id.ImageView_far ? "capture_far" : "capture_close";
+                        String pictureName = requestCode == R.id.ImageView_far ? CAPTURE_FAR : CAPTURE_CLOSE;
                         FileOutputStream fos = openFileOutput(pictureName, MODE_PRIVATE);
-                        picture.compress(CompressFormat.PNG, 0, fos);
+                        picture.compress(CompressFormat.JPEG, 80, fos);
                         fos.close();
 
                         setPictureToImageView(pictureName, (ImageView) findViewById(requestCode));
@@ -237,7 +264,19 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     currentIncident.description = data.getStringExtra(IntentData.EXTRA_COMMENT);
                     ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
                 }
-
+                break;
+            case REQUEST_COMMENT_BEFORE_EXIT:
+                if (resultCode == RESULT_OK) {
+                    currentIncident.description = data.getStringExtra(IntentData.EXTRA_COMMENT);
+                    ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
+                    postNewIncident();
+                }
+                break;
+            case REQUEST_DETAILS:
+                if (resultCode == RESULT_OK) {
+                    img_comment = data.getStringExtra("comment");
+                }
+                break;
             default:
                 break;
         }
@@ -246,6 +285,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     private void setCategory(Intent data) {
         String subCategories = EMPTY_STRING, category = EMPTY_STRING;
         long catId = data.getLongExtra(IntentData.EXTRA_CATEGORY_ID, 0);
+        Log.d(Constants.PROJECT_TAG, "Cat id = " + catId);
         currentIncident.categoryId = catId;
 
         do {
@@ -279,7 +319,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.editable_picture_frame);
             if (picture.getHeight() > picture.getWidth()) {
                 Matrix m = new Matrix();
-                m.postRotate(90);
+                m.postRotate(-90);
                 picture = Bitmap.createBitmap(picture, 0, 0, picture.getWidth(), picture.getHeight(), m, true);
             }
             picture = Bitmap.createScaledBitmap(picture, d.getIntrinsicWidth(), d.getIntrinsicHeight(), true);
@@ -288,9 +328,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             imageView.setImageDrawable(d);
 
             if (!hasPic) hasPic = (imageView.getId() == R.id.ImageView_far);
-            
-            if(hasPic)
-            {
+
+            if (hasPic && (imageView.getId() == R.id.ImageView_far)) {
                 loadZoom();
             }
         } catch (FileNotFoundException e) {
@@ -329,15 +368,35 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     public void onRequestcompleted(int requestCode, Object result) {
         if (requestCode == AVService.REQUEST_JSON && result != null) {
             try {
+                Log.d(Constants.PROJECT_TAG, "Request result" + (String) result);
                 JSONObject answer = new JSONArray((String) result).getJSONObject(0);
                 if (JsonData.VALUE_REQUEST_NEW_INCIDENT.equals(answer.getString(JsonData.PARAM_REQUEST))
                     && JsonData.VALUE_INCIDENT_SAVED.equals(answer.getJSONObject(JsonData.PARAM_ANSWER).get(JsonData.PARAM_STATUS))) {
 
-                    // TODO do something
+                    /*
+                     * FileInputStream fis_close = openFileInput(CAPTURE_CLOSE);
+                     * FileInputStream fis_far = openFileInput(CAPTURE_FAR);
+                     */
+
+                    File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
+                    File img_far = new File(getFilesDir() + "/" + CAPTURE_ARROW);
+
+                    AVService.getInstance(this).postImage(Utils.getUdid(this), img_comment,
+                                                          answer.getJSONObject(JsonData.PARAM_ANSWER).getString(JsonData.ANSWER_INCIDENT_ID), img_far,
+                                                          img_close);
+                    Toast.makeText(this, getString(R.string.report_detail_new_report_ok), Toast.LENGTH_LONG).show();
+                    finish();
+                } else {
+                    Toast.makeText(this, getString(R.string.server_error), Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
-                e.printStackTrace();
-            }
+                Log.e(Constants.PROJECT_TAG, "Error uploading image", e);
+            }/*
+              * catch (FileNotFoundException e) {
+              * // TODO Auto-generated catch block
+              * Log.e(Constants.PROJECT_TAG,"File not found",e);
+              * }
+              */
         }
 
         dismissDialog(DIALOG_PROGRESS);

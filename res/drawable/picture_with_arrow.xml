@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list
+		xmlns:android="http://schemas.android.com/apk/res/android">
+		<item
+				android:id="@+id/final_photo"
+				android:drawable="@drawable/icon" />
+		<item
+				android:id="@+id/final_photo_arrow"
+				android:drawable="@drawable/icon" />
+</layer-list>

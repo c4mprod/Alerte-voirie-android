@@ -1,11 +1,16 @@
 package com.fabernovel.alertevoirie.entities;
 
+import java.io.FileNotFoundException;
+
 import com.fabernovel.alertevoirie.R;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Bitmap.Config;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -31,15 +36,16 @@ public class PictoView extends ImageView {
     private float    newcenterx  = 0;
     private float    newcentery  = 0;
     private boolean  firstmove   = false;
+    Bitmap           arrow;
 
     public PictoView(Context context) {
         super(context);
-        
+
     }
 
     public PictoView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        
+
     }
 
     public PictoView(Context context, AttributeSet attrs, int defStyle) {
@@ -48,17 +54,17 @@ public class PictoView extends ImageView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        dumpEvent(event);
+        //dumpEvent(event);
 
         Log.d(Constants.PROJECT_TAG, "1:" + (event.getX() < (getWidth() / 2) + newcenterx + 50));
         Log.d(Constants.PROJECT_TAG, "2:" + (event.getX() > (getWidth() / 2) + newcenterx - 50));
         Log.d(Constants.PROJECT_TAG, "3:" + (event.getY() < (getHeight() / 2) + newcentery + 50));
         Log.d(Constants.PROJECT_TAG, "4:" + (event.getX() > (getHeight() / 2) + newcentery - 50));
 
-        if (((event.getX() < (getWidth() / 2) + newcenterx + 50 && event.getX() > (getWidth() / 2) + newcenterx - 50) && (event.getY() < (getHeight() / 2)
-                                                                                                                                         + newcentery + 50 && event.getY() > (getHeight() / 2)
+        if (((event.getX() < (getWidth() / 2) + newcenterx + 100 && event.getX() > (getWidth() / 2) + newcenterx - 100) && (event.getY() < (getHeight() / 2)
+                                                                                                                                         + newcentery + 100 && event.getY() > (getHeight() / 2)
                                                                                                                                                                              + newcentery
-                                                                                                                                                                             - 50))) {
+                                                                                                                                                                             - 100))) {
             switch (event.getAction() & MotionEvent.ACTION_MASK) {
                 case MotionEvent.ACTION_DOWN:
                     if (lastx == 0 && lasty == 0) {
@@ -86,12 +92,11 @@ public class PictoView extends ImageView {
                     }
                     break;
             }
-            
-        }else
-        {
+
+        } else {
             mode = ROTATE;
         }
-        
+
         invalidate();
 
         return true;
@@ -99,7 +104,11 @@ public class PictoView extends ImageView {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        
+
+        if (arrow == null) {
+            arrow = Bitmap.createBitmap(getWidth(), getHeight(), Config.ARGB_4444);
+            canvas.setBitmap(arrow);
+        }
 
         if (mode == DRAG) {
             canvas.rotate(degree, (getWidth() / 2) + newcenterx, (getHeight() / 2) + newcentery);
@@ -121,11 +130,14 @@ public class PictoView extends ImageView {
         }
         Log.d(Constants.PROJECT_TAG, "Translation : " + newcenterx + "," + newcentery);
         canvas.translate(newcenterx, newcentery);
+
         super.onDraw(canvas);
+
     }
 
     /**
-     *  Show an event in the LogCat view, for debugging 
+     * Show an event in the LogCat view, for debugging
+     * 
      * @param event
      */
     private void dumpEvent(MotionEvent event) {
@@ -149,30 +161,68 @@ public class PictoView extends ImageView {
         sb.append("]");
         Log.d(Constants.PROJECT_TAG, sb.toString());
     }
-    
+
     /**
      * Method to link a photo to this arrow, giving the photo position on arrow layout
      * 
      * @param picture
      * @param x
      * @param y
+     * @throws FileNotFoundException
      */
-    public Drawable setSupport(Bitmap picture, float x, float y)
-    {
-        float arrow_x = (getWidth() / 2) + newcenterx-x;
-        float arrow_y = (getHeight() / 2) + newcentery-y;
-        
-        LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.editable_picture_frame);
-        if (picture.getHeight() > picture.getWidth()) {
-            Matrix m = new Matrix();
-            m.postRotate(90);
-            picture = Bitmap.createBitmap(picture, 0, 0, picture.getWidth(), picture.getHeight(), m, true);
-        }
-        picture = Bitmap.createScaledBitmap(picture, d.getIntrinsicWidth(), d.getIntrinsicHeight(), true);
+    public Bitmap setSupport(Bitmap picture, float coeffx, float coeffy, Context c) throws FileNotFoundException {
 
-        d.setDrawableByLayerId(R.id.picture, new BitmapDrawable(picture));
-        
-        return d;
+        // 320*480
+        int arrow_x = (int) (((getWidth() / 2)) * coeffx);
+        int arrow_y = (int) (((getHeight() / 2)) * coeffy);
+        int width = this.getDrawable().getIntrinsicWidth();
+        int height = this.getDrawable().getIntrinsicHeight();
+
+        Bitmap arrow = Bitmap.createBitmap(((BitmapDrawable) this.getDrawable()).getBitmap(), 0, 0, width, height);
+
+        /*
+         * if (picture.getWidth() > picture.getHeight()) {
+         * Matrix m = new Matrix();
+         * m.postRotate(90);
+         * picture = Bitmap.createBitmap(picture, 0, 0, picture.getWidth(), picture.getHeight(), m, true);
+         * }
+         */
+
+        // createa matrix for the manipulation
+        Matrix matrix = new Matrix();
+        // rotate the Bitmap
+        matrix.postRotate(degree, (getWidth() / 2) + newcenterx, (getHeight() / 2) + newcentery);
+
+        // recreate the new Bitmap
+        arrow = Bitmap.createBitmap(arrow, 0, 0, width, height, matrix, true);
+
+        int[] pixels1 = new int[picture.getWidth() * picture.getHeight()];
+        int[] pixels2 = new int[width * height];
+
+        try {
+            picture.getPixels(pixels1, 0, picture.getWidth(), 0, 0, picture.getWidth(), picture.getHeight());
+            arrow.getPixels(pixels2, 0, width, 0, 0, width, height);
+        } catch (IllegalArgumentException e) {
+            // TODO:
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // TODO:
+        }
+
+        Bitmap b = Bitmap.createBitmap(picture.getWidth(), picture.getHeight(), picture.getConfig());
+        Canvas myCanvas = new Canvas();
+
+        myCanvas.setBitmap(b);
+        // and then just draw them on canvas
+        myCanvas.drawBitmap(pixels1, 0, picture.getWidth(), 0, 0, picture.getWidth(), picture.getHeight(), true, null);
+        myCanvas.drawBitmap(pixels2, 0, width, arrow_x, arrow_y, width, height, true, null);
+
+        picture = b;
+
+        // d.setDrawableByLayerId(R.id.final_photo_arrow, new BitmapDrawable(arrow));
+
+        picture.compress(CompressFormat.JPEG, 80, c.openFileOutput("arrowed.jpg", Context.MODE_PRIVATE));
+
+        return picture;
     }
 
 }

@@ -2,20 +2,31 @@
 <FrameLayout
 		xmlns:android="http://schemas.android.com/apk/res/android"
 		android:layout_height="fill_parent"
-		android:layout_width="fill_parent" android:id="@+id/FrameLayout_report_picture">
-
+		android:layout_width="fill_parent"
+		android:id="@+id/FrameLayout_report_picture">
+		
 		<ImageView
 				android:id="@+id/ImageViewPictoBG"
 				android:layout_gravity="center_vertical|center_horizontal"
-				style="@style/Button" android:layout_height="wrap_content" android:layout_width="wrap_content" android:adjustViewBounds="true"></ImageView>
+				style="@style/Button"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:adjustViewBounds="true"></ImageView>
 		<com.fabernovel.alertevoirie.entities.PictoView
 				android:id="@+id/ViewPicto"
 				android:src="@drawable/big_arrow"
 				android:clickable="false"
-				android:layout_width="fill_parent"
-				android:layout_height="fill_parent"
-				android:scaleType="center"></com.fabernovel.alertevoirie.entities.PictoView>
-
+				android:scaleType="center"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:layout_gravity="center_vertical|center_horizontal"></com.fabernovel.alertevoirie.entities.PictoView>
+		<EditText
+				android:id="@+id/Comment_img"
+				android:layout_height="wrap_content"
+				android:hint="Commentaire"
+				android:layout_width="250dip"
+				android:layout_gravity="bottom|left"
+				android:layout_margin="10dip"></EditText>
 		<Button
 				android:id="@+id/ButtonViewPicto"
 				android:layout_width="wrap_content"
@@ -24,5 +35,4 @@
 				android:text="ok"
 				style="@style/Button"
 				android:layout_margin="10dip"></Button>
-
 </FrameLayout>

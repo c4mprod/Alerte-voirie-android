@@ -3,6 +3,7 @@ package com.fabernovel.alertevoirie.entities;
 public interface JsonData {
 
     String VALUE_REQUEST_GET_INCIDENTS_BY_POSITION = "getIncidentsByPosition";
+    String VALUE_REQUEST_GET_INCIDENTS_STATS       = "getIncidentStats";
     String VALUE_REQUEST_NEW_INCIDENT              = "saveIncident";
     String VALUE_REQUEST_GET_MY_INCIDENTS          = "getReports";
 
@@ -34,11 +35,15 @@ public interface JsonData {
     String PARAM_INCIDENT_DATE                     = "date";
     String PARAM_INCIDENT_STATUS                   = "state";
     String PARAM_INCIDENT_CATEGORY                 = "categoryId";
-
+    String PARAM_INCIDENT_PICTURES                 = "pictures";
+    String PARAM_INCIDENT_PICTURES_CLOSE           = "close";
+    String PARAM_INCIDENT_PICTURES_FAR             = "far";
     String PARAM_INCIDENT_LATITUDE                 = "lat";
     String PARAM_INCIDENT_LONGITUDE                = "lng";
     String PARAM_INCIDENT_ID                       = "id";
     String PARAM_INCIDENT_CONFIRMS                 = "confirms";
     String PARAM_INCIDENTS                         = "incidents";
+
+    String ANSWER_INCIDENT_ID                      = "IncidentId";
 
 }

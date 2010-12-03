@@ -52,9 +52,10 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
                     new AddressGetter().execute();
                 } else {
 
-                    String address = ((TextView) findViewById(R.id.EditText_address_number)).getText().toString() + " "
-                                     + ((TextView) findViewById(R.id.EditText_address_street)).getText().toString() + " ("
-                                     + ((TextView) findViewById(R.id.EditText_address_town)).getText().toString() + ")";
+                    String address = (((TextView) findViewById(R.id.EditText_address_number)).getText().toString() + " "
+                                      + ((TextView) findViewById(R.id.EditText_address_street)).getText().toString() + " \n"
+                                      + ((TextView) findViewById(R.id.EditText_address_postcode)).getText().toString() + " " + ((TextView) findViewById(R.id.EditText_address_town)).getText()
+                                                                                                                                                                                    .toString()).trim();
                     Intent result = new Intent();
                     result.putExtra(IntentData.EXTRA_ADDRESS, address);
                     result.putExtra(IntentData.EXTRA_LONGITUDE, (double) currentPoint.getLongitudeE6() / 1E6);
@@ -174,8 +175,9 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     }
 
     private class AddressGetter extends AsyncTask<Double, Void, String[]> {
-        
+
         protected GeoPoint geopoint;
+
         @Override
         protected String[] doInBackground(Double... params) {
 
@@ -193,7 +195,7 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
 
                     if (addr.size() > 0) {
                         geopoint = new GeoPoint((int) (addr.get(0).getLatitude() * 1E6), (int) (addr.get(0).getLongitude() * 1E6));
-                        
+
                     }
                 }
 
@@ -217,45 +219,56 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
 
         @Override
         protected void onPostExecute(String[] result) {
-            
-            if(geopoint!=null)
-            {
+
+            if (geopoint != null) {
                 setMarker(geopoint);
                 map.getController().animateTo(geopoint);
                 geopoint = null;
             }
-            
+
             Log.d(Constants.PROJECT_TAG, "n° : " + result[0]);
             Log.d(Constants.PROJECT_TAG, "Rue : " + result[1]);
-            if (result[2] != null) {
+            Log.d(Constants.PROJECT_TAG, "CP : " + result[2]);
+            Log.d(Constants.PROJECT_TAG, "Ville : " + result[3]);
 
-                String number, street, postcode, town;
+            String number = "", street = "", postcode = "", town = "";
+
+            if (result[2] != null) {
 
                 number = result[2].equals(result[1]) ? "" : result[1];
                 street = (result[3]).equals(new String(result[0]).trim()) ? "" : result[0].trim();
                 postcode = result[2];
                 town = result[3];
 
-                ((TextView) findViewById(R.id.EditText_address_street)).setText(street != null ? street : "");
-                ((TextView) findViewById(R.id.EditText_address_number)).setText(number != null ? number : "");
-                ((TextView) findViewById(R.id.EditText_address_postcode)).setText(postcode);
-                ((TextView) findViewById(R.id.EditText_address_town)).setText(town);
+               
 
-                Log.d(Constants.PROJECT_TAG, "Number : " + number);
-                Log.d(Constants.PROJECT_TAG, "Street : " + street);
-                Log.d(Constants.PROJECT_TAG, "Postcode : " + postcode);
-                Log.d(Constants.PROJECT_TAG, "Town : " + town);
+            } else {
+                for (String string : result) {
+                    street += (string != null ? " " + string : "");
+                }
+                street = street.trim();
 
-                ((Button) findViewById(R.id.Button_validate)).setText(R.string.select_position_btn_validate);
-                search = false;
-
-                if (!((TextView) findViewById(R.id.EditText_address_street)).getText().toString().equals("")
-                    && !((TextView) findViewById(R.id.EditText_address_postcode)).getText().toString().equals("")
-                    && !((TextView) findViewById(R.id.EditText_address_town)).getText().toString().equals("")) {
-                    findViewById(R.id.Button_validate).setEnabled(true);
-                } else
-                    findViewById(R.id.Button_validate).setEnabled(false);
             }
+
+            ((TextView) findViewById(R.id.EditText_address_street)).setText(street != null ? street : "");
+            ((TextView) findViewById(R.id.EditText_address_number)).setText(number != null ? number : "");
+            ((TextView) findViewById(R.id.EditText_address_postcode)).setText(postcode);
+            ((TextView) findViewById(R.id.EditText_address_town)).setText(town);
+
+            if (!((TextView) findViewById(R.id.EditText_address_street)).getText().toString().equals("")
+                && !((TextView) findViewById(R.id.EditText_address_postcode)).getText().toString().equals("")
+                && !((TextView) findViewById(R.id.EditText_address_town)).getText().toString().equals("")) {
+                findViewById(R.id.Button_validate).setEnabled(true);
+            } else
+                findViewById(R.id.Button_validate).setEnabled(false);
+
+            ((Button) findViewById(R.id.Button_validate)).setText(R.string.select_position_btn_validate);
+            search = false;
+            
+            Log.d(Constants.PROJECT_TAG, "Number : " + number);
+            Log.d(Constants.PROJECT_TAG, "Street : " + street);
+            Log.d(Constants.PROJECT_TAG, "Postcode : " + postcode);
+            Log.d(Constants.PROJECT_TAG, "Town : " + town);
         }
     }
 }
