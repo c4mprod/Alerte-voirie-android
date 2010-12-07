@@ -1,11 +1,19 @@
 package com.fabernovel.alertevoirie;
 
+import java.util.Date;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Dialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnDismissListener;
 import android.os.Bundle;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
@@ -19,10 +27,11 @@ import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
 
 public class MyIncidentsActivity extends ListActivity implements RequestListener {
-    
 
     public static final String[] INCIDENTS       = new String[] { JsonData.PARAM_ONGOING_INCIDENTS, JsonData.PARAM_UPDATED_INCIDENTS,
             JsonData.PARAM_RESOLVED_INCIDENTS   };
+
+    private static final int     DIALOG_PROGRESS = 123456789;
 
     JSONArray[]                  data            = new JSONArray[3];
 
@@ -38,9 +47,9 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
         try {
             AVService.getInstance(this).postJSON(new JSONArray().put(new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_MY_INCIDENTS)
                                                                                      .put(JsonData.PARAM_UDID, Utils.getUdid(this))), this);
-            // showDialog(DIALOG_PROGRESS);
+            showDialog(DIALOG_PROGRESS);
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(Constants.PROJECT_TAG, "error launching My Incidents", e);
         }
 
         // get view references
@@ -99,7 +108,12 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
                 if (JsonData.VALUE_REQUEST_GET_MY_INCIDENTS.equals(answer.getString(JsonData.PARAM_REQUEST))) {
                     answer = answer.getJSONObject(JsonData.PARAM_ANSWER);
                     for (int i = 0; i < data.length; i++) {
-                        ((TextView) tabs.getChildAt(i)).setText(answer.getString(INCIDENTS[i]));
+                        ((TextView) tabs.getChildAt(i)).setText(answer.getString(INCIDENTS[i])
+                                                                + "\n"
+                                                                + (INCIDENTS[i].equals("ongoing_incidents") ? getString(R.string.home_label_current)
+                                                                                                           : INCIDENTS[i].equals("updated_incidents") ? getString(R.string.home_label_update)
+                                                                                                                                                     : INCIDENTS[i].equals("resolved_incidents") ? getString(R.string.home_label_solved)
+                                                                                                                                                                                                : ""));
                         data[i] = answer.getJSONObject(JsonData.PARAM_INCIDENTS).getJSONArray(INCIDENTS[i]);
                         Log.d(Constants.PROJECT_TAG, "data : " + INCIDENTS[i] + " : " + data[i].length());
 
@@ -107,6 +121,8 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+            } finally {
+                dismissDialog(DIALOG_PROGRESS);
             }
         }
 
@@ -115,14 +131,49 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
         // dismissDialog(DIALOG_PROGRESS);
     }
 
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        switch (id) {
+            case DIALOG_PROGRESS:
+                ProgressDialog pd = new ProgressDialog(this);
+                pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                pd.setIndeterminate(true);
+                pd.setOnDismissListener(new OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        removeDialog(DIALOG_PROGRESS);
+                    }
+                });
+                pd.setOnCancelListener(new OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        AVService.getInstance(MyIncidentsActivity.this).cancelTask();
+                        finish();
+                    }
+                });
+                pd.setMessage(getString(R.string.ui_message_loading));
+                return pd;
+
+            default:
+                return super.onCreateDialog(id);
+        }
+    }
+
     private void setAdapterForTab(int tab) {
-        // Log.d(Constants.PROJECT_TAG, "data " + data[tab].length());
+        Log.d(Constants.PROJECT_TAG, "data " + data[tab].length());
 
         setListAdapter(new JSONAdapter(this, data[tab], R.layout.cell_report_noicon, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
-                JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, JsonData.PARAM_INCIDENT_OBJECT) {
+                JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, JsonData.PARAM_INCIDENT_OBJECT,
+                                       JsonData.PARAM_INCIDENT_DATE, R.layout.cell_category) {
             @Override
             protected String getCategoryOfItem(int itemId) {
-                return super.getCategoryOfItem(itemId).substring(0, 10);
+                String date = super.getCategoryOfItem(itemId).substring(0, 10);
+                
+                Log.d(Constants.PROJECT_TAG,date);
+
+                return ((String) DateFormat.format("MMMM yyyy",
+                          new Date(Integer.parseInt(date.substring(0, 4)), Integer.parseInt(date.substring(5, 7))-1, Integer.parseInt(date.substring(8, 10))))).replace("39", "20");
+//                return date;
             }
         });
 

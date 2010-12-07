@@ -26,13 +26,14 @@ import com.c4mprod.utils.ImageDownloader;
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.entities.JsonData;
+import com.fabernovel.alertevoirie.entities.Last_Location;
 import com.fabernovel.alertevoirie.utils.JSONAdapter;
 import com.fabernovel.alertevoirie.utils.Utils;
 import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
 
 public class ExistingIncidentsActivity extends ListActivity implements RequestListener, LocationListener {
-    private static final int DIALOG_PROGRESS = 0;
+    private static final int      DIALOG_PROGRESS = 0;
     private final ImageDownloader imageDownloader = new ImageDownloader();
 
     @Override
@@ -47,8 +48,8 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                                                  .put(JsonData.PARAM_UDID, Utils.getUdid(this))
                                                  .put(JsonData.PARAM_RADIUS, JsonData.VALUE_RADIUS_CLOSE)
                                                  .put(JsonData.PARAM_POSITION,
-                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, "5.36628").put(JsonData.PARAM_POSITION_LATITUDE,
-                                                                                                                             "43.30957"));
+                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, Last_Location.longitude)
+                                                                      .put(JsonData.PARAM_POSITION_LATITUDE, Last_Location.latitude));
 
             AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
 
@@ -148,6 +149,7 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
         public View getView(int position, View convertView, ViewGroup parent) {
             View v = super.getView(position, convertView, parent);
             ImageView icone = (ImageView) v.findViewById(R.id.ImageView_icon);
+
             String imgName = null;
             try {
                 JSONArray imgarr = ((JSONObject) getItem(position)).getJSONObject(JsonData.PARAM_INCIDENT_PICTURES)
@@ -167,12 +169,20 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                 }
 
                 Log.d(Constants.PROJECT_TAG, "" + imgName);
-                if(imageDownloader.getDefault_img()==null)
-                {
+                if (imageDownloader.getDefault_img() == null) {
                     imageDownloader.setDefault_img(icone.getDrawable());
                 }
                 imageDownloader.download(imgName, icone);
-                //ImageManager.fetchDrawableOnThread(imgName, icone, icone.getDrawable());
+
+                String state = ((JSONObject) getItem(position)).getString(JsonData.PARAM_INCIDENT_STATUS);
+                
+                Log.d(Constants.PROJECT_TAG,state);
+
+                ((ImageView) v.findViewById(R.id.ImageView_icn)).setImageDrawable(state.equalsIgnoreCase("O") ? getResources().getDrawable(R.drawable.icn_incident_nonvalide)
+                                                                                                           : state.equalsIgnoreCase("U") ? getResources().getDrawable(R.drawable.icn_photo_ajoutee)
+                                                                                                                                        : state.equalsIgnoreCase("R") ? getResources().getDrawable(R.drawable.icn_incident_resolu2)
+                                                                                                                                                                     : null);
+                // ImageManager.fetchDrawableOnThread(imgName, icone, icone.getDrawable());
 
             } catch (JSONException e) {
                 Log.e(Constants.PROJECT_TAG, ((JSONObject) getItem(position)).toString(), e);

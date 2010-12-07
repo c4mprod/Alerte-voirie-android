@@ -1,5 +1,9 @@
 package com.fabernovel.alertevoirie;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,6 +16,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.os.Bundle;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -174,7 +179,20 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
         @Override
         protected String getCategoryOfItem(int itemId) {
-            return super.getCategoryOfItem(itemId).substring(0, 10);
+            String date = super.getCategoryOfItem(itemId).substring(0, 10);
+
+            Log.d(Constants.PROJECT_TAG, date);
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            
+            new Date(10,10,10);
+
+            try {
+                return ((String) DateFormat.format("MMMM yyyy", sdf.parse(date)));
+            } catch (ParseException e) {
+                Log.e(Constants.PROJECT_TAG, "Error parsing date", e);
+            }
+            return date;
         }
 
         @Override

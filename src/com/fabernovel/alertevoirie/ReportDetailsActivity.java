@@ -1,7 +1,6 @@
 package com.fabernovel.alertevoirie;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -154,6 +153,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             case R.id.Button_validate:
 
                 loadComment(REQUEST_COMMENT_BEFORE_EXIT);
+                //$FALL-THROUGH$
             default:
                 break;
         }

@@ -2,18 +2,14 @@ package com.fabernovel.alertevoirie.entities;
 
 import java.io.FileNotFoundException;
 
-import com.fabernovel.alertevoirie.R;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -140,6 +136,7 @@ public class PictoView extends ImageView {
      * 
      * @param event
      */
+    @SuppressWarnings("unused")
     private void dumpEvent(MotionEvent event) {
         String names[] = { "DOWN", "UP", "MOVE", "CANCEL", "OUTSIDE", "POINTER_DOWN", "POINTER_UP", "7?", "8?", "9?" };
         StringBuilder sb = new StringBuilder();

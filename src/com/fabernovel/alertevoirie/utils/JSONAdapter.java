@@ -1,5 +1,6 @@
 package com.fabernovel.alertevoirie.utils;
 
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,19 +53,23 @@ public class JSONAdapter extends BaseAdapter {
 
         for (int i = 0, j = 0; i < data.length(); i++, j++) {
             String cat = getCategoryOfItem(i);
+            Log.d(Constants.PROJECT_TAG, "catégorie : " + cat);
             if (!cat.equals(currentCat)) {
                 Log.d(Constants.PROJECT_TAG, "category " + j + " : " + cat);
                 categories.put(j++, cat);
                 currentCat = cat;
+
             }
         }
     }
+
+    
 
     protected String getCategoryOfItem(int itemId) {
         try {
             return data.getJSONObject(itemId).getJSONObject(jsonObjectName).getString(categoryField);
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(Constants.PROJECT_TAG, "category error", e);
             return null;
         }
     }
@@ -74,8 +79,10 @@ public class JSONAdapter extends BaseAdapter {
         if (data != null) {
             Log.d(Constants.PROJECT_TAG, "get count = " + data.length());
             return data.length() + (categories == null ? 0 : categories.size());
-        } else
+        } else {
+            Log.d(Constants.PROJECT_TAG, "zero !!!");
             return 0;
+        }
     }
 
     @Override
@@ -90,7 +97,7 @@ public class JSONAdapter extends BaseAdapter {
                 return data.get(position);
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(Constants.PROJECT_TAG, "get item exception", e);
         }
         return null;
     }
@@ -103,20 +110,24 @@ public class JSONAdapter extends BaseAdapter {
     @Override
     public int getItemViewType(int position) {
         if (categories != null && categories.indexOfKey(position) >= 0) {
+            Log.d(Constants.PROJECT_TAG, "type categorie");
             return TYPE_CATEGORY;
         } else {
+            Log.d(Constants.PROJECT_TAG, "type item ");
             return TYPE_ITEM;
         }
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        Log.d(Constants.PROJECT_TAG, "getview position : " + position);
+
         switch (getItemViewType(position)) {
             case TYPE_ITEM:
                 Log.d(Constants.PROJECT_TAG, "get item number " + position);
                 View v;
                 View[] subViews;
-                if (convertView != null) {
+                if (convertView != null && convertView.getTag() != null) {
                     v = convertView;
                     subViews = (View[]) v.getTag();
                 } else {
@@ -139,19 +150,21 @@ public class JSONAdapter extends BaseAdapter {
                             // TODO download image
                         }
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    Log.e(Constants.PROJECT_TAG, "Error getting views", e);
                 }
                 return v;
 
             case TYPE_CATEGORY:
+                Log.d(Constants.PROJECT_TAG, "getCat : " + position);
                 TextView tv;
-                if (convertView != null) {
+                if (convertView != null && convertView instanceof TextView) {
                     tv = (TextView) convertView;
                 } else {
                     tv = (TextView) inflater.inflate(categoryLayout, null);
                 }
                 tv.setText(categories.get(position));
+
                 return tv;
 
             default:
@@ -165,6 +178,7 @@ public class JSONAdapter extends BaseAdapter {
             if (categories.keyAt(i) >= position) break;
         }
         Log.d(Constants.PROJECT_TAG, "category for position " + position + " = " + (i - 1));
+
         return i - 1;
     }
 }

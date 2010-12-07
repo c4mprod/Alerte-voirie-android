@@ -73,6 +73,7 @@ public class CategoryProvider extends ContentProvider {
             switch (uriMatcher.match(uri)) {
                 case CATEGORIES_ID:
                     categoryId = uri.getLastPathSegment();
+                    //$FALL-THROUGH$
                 case CATEGORIES:
                     JSONObject parent = categories.getJSONObject(categoryId);
                     if (parent.has(JsonData.PARAM_CATEGORY_CHILDREN)) {

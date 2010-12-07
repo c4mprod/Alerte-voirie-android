@@ -6,6 +6,7 @@ import org.json.JSONObject;
 
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.JsonData;
+import com.fabernovel.alertevoirie.entities.Last_Location;
 import com.fabernovel.alertevoirie.utils.LocationHelper;
 import com.fabernovel.alertevoirie.utils.Utils;
 import com.fabernovel.alertevoirie.webservice.AVService;
@@ -34,14 +35,14 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
     private LocationManager  locationManager;
     private Location         lastlocation;
     private static boolean   handled         = false;
-    private boolean dialog_shown = false;
+    private boolean          dialog_shown    = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        showDialog(DIALOG_PROGRESS);
         dialog_shown = true;
+        showDialog(DIALOG_PROGRESS);
 
         setContentView(R.layout.layout_home);
 
@@ -106,11 +107,14 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
         try {
             GeoPoint newGeo = LocationHelper.geoFromLocation(lastlocation);
 
+            Last_Location.longitude = newGeo.getLongitudeE6() / 1E6;
+            Last_Location.latitude = newGeo.getLatitudeE6() / 1E6;
+
             JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_INCIDENTS_STATS)
                                                  .put(JsonData.PARAM_UDID, Utils.getUdid(this))
                                                  .put(JsonData.PARAM_POSITION,
-                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, newGeo.getLongitudeE6() / 1E6)
-                                                                      .put(JsonData.PARAM_POSITION_LATITUDE, newGeo.getLatitudeE6() / 1E6));
+                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, Last_Location.longitude)
+                                                                      .put(JsonData.PARAM_POSITION_LATITUDE, Last_Location.latitude));
 
             AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
 
@@ -152,8 +156,7 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
                 pd.setOnDismissListener(new OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        if(dialog_shown)
-                        removeDialog(DIALOG_PROGRESS);
+                        if (dialog_shown) removeDialog(DIALOG_PROGRESS);
                     }
                 });
                 pd.setOnCancelListener(new OnCancelListener() {

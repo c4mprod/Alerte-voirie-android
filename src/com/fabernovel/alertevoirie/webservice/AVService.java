@@ -120,6 +120,7 @@ public class AVService {
      * @param image_near
      *            The file containing close image
      */
+    @SuppressWarnings("unchecked")
     public void postImage(String udid, String img_comment, String incident_id, File image_far, File image_near) {
 
         ArrayList<Object> image_1 = new ArrayList<Object>();
