@@ -1,5 +1,9 @@
 package com.fabernovel.alertevoirie.utils;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -7,6 +11,7 @@ import org.json.JSONObject;
 import com.fabernovel.alertevoirie.entities.Constants;
 
 import android.content.Context;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -62,13 +67,16 @@ public class JSONAdapter extends BaseAdapter {
         }
     }
 
+    public int getRealPositionOfItem(int position) {
+        
+        return position - (categoryForPosition(position) + 1);
+    }
+
     protected String getCategoryOfItem(int itemId) {
         try {
-            if(jsonObjectName!=null)
-            {
+            if (jsonObjectName != null) {
                 return data.getJSONObject(itemId).getJSONObject(jsonObjectName).getString(categoryField);
-            }else
-            {
+            } else {
                 return data.getJSONObject(itemId).getString(categoryField);
             }
         } catch (JSONException e) {

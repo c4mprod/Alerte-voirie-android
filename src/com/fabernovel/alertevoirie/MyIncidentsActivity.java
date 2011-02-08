@@ -22,6 +22,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.fabernovel.alertevoirie.entities.Constants;
@@ -164,18 +165,25 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
 
                 if (JsonData.VALUE_REQUEST_GET_MY_INCIDENTS.equals(answer.getString(JsonData.PARAM_REQUEST))) {
                     answer = answer.getJSONObject(JsonData.PARAM_ANSWER);
-                    for (int i = 0; i < 3; i++) {
-                        title[i] = answer.getString(INCIDENTS[i])
-                                   + "\n"
-                                   + (INCIDENTS[i].equals("declared_incidents") ? getString(R.string.home_label_current)
-                                                                               : INCIDENTS[i].equals("updated_incidents") ? getString(R.string.home_label_update)
-                                                                                                                         : INCIDENTS[i].equals("resolved_incidents") ? getString(R.string.home_label_solved)
-                                                                                                                                                                    : "");
-                        ((TextView) tabs.getChildAt(i)).setText(title[i]);
-                        if (title[i].startsWith("0")) ((TextView) tabs.getChildAt(i)).setEnabled(false);
+                    try {
+                        for (int i = 0; i < 3; i++) {
+                            title[i] = answer.getString(INCIDENTS[i])
+                                       + "\n"
+                                       + (INCIDENTS[i].equals("declared_incidents") ? getString(R.string.home_label_current)
+                                                                                   : INCIDENTS[i].equals("updated_incidents") ? getString(R.string.home_label_update)
+                                                                                                                             : INCIDENTS[i].equals("resolved_incidents") ? getString(R.string.home_label_solved)
+                                                                                                                                                                        : "");
+                            ((TextView) tabs.getChildAt(i)).setText(title[i]);
+                            if (title[i].startsWith("0")) ((TextView) tabs.getChildAt(i)).setEnabled(false);
 
+                        }
+                        data = answer.getJSONObject(JsonData.PARAM_INCIDENTS);
+                    } catch (Exception e) {
+                        Log.e(Constants.PROJECT_TAG, "Exception", e);
+                        finish();
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        Toast.makeText(this, "Erreur: pas d'incidents à afficher", Toast.LENGTH_SHORT).show();
                     }
-                    data = answer.getJSONObject(JsonData.PARAM_INCIDENTS);
                     // Log.d(Constants.PROJECT_TAG, "data : " + INCIDENTS[i] + " : " + data.getJSONArray(INCIDENTS[i]).length());
 
                 }

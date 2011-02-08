@@ -3,8 +3,10 @@ package com.fabernovel.alertevoirie;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.TreeMap;
+import java.util.Vector;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,10 +40,11 @@ import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
 
 public class NewsActivity extends ListActivity implements RequestListener {
-    private static final int          DIALOG_PROGRESS = 0;
-    private JSONObject                response;
-    private TreeMap<Long, JSONObject> logs;
-    private ArrayList<JSONObject>     logList;
+    private static final int            DIALOG_PROGRESS = 0;
+    private JSONObject                  response;
+    private TreeMap<Long, JSONObject>   logs;
+    private TreeMap<String, JSONObject> logList;
+    private Vector<Long> lock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +87,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
                         removeDialog(DIALOG_PROGRESS);
                     }
                 });
+                
                 pd.setOnCancelListener(new OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
@@ -91,6 +95,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
                         finish();
                     }
                 });
+                
                 pd.setMessage(getString(R.string.ui_message_loading));
                 return pd;
 
@@ -164,6 +169,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
 */
 //@formatter:on 
 
+       
         try {
             JSONArray responses;
             responses = new JSONArray((String) result);
@@ -172,12 +178,13 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
             if (requestCode == AVService.REQUEST_JSON) {
 
+                lock = new Vector<Long>();
                 logs = new TreeMap<Long, JSONObject>();
-                logList = new ArrayList<JSONObject>();
+                logList = new TreeMap<String, JSONObject>(Collections.reverseOrder());
                 for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_INCIDENT_LOG).length(); i++) {
                     JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_INCIDENT_LOG).getJSONObject(i);
                     logs.put(job.getLong(JsonData.ANSWER_INCIDENT_ID), job);
-                    logList.add(job);
+                    logList.put(job.getString(JsonData.PARAM_INCIDENT_DATE) + job.getLong(JsonData.ANSWER_INCIDENT_ID), job);
                 }
 
                 if (JsonData.VALUE_REQUEST_GET_USERS_ACTVITIES.equals(response.getString(JsonData.PARAM_REQUEST))) {
@@ -205,7 +212,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
                         if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);
                     }
 
-                    for (JSONObject log : logList) {
+                    for (JSONObject log : logList.values()) {
                         JSONObject job = new JSONObject(events.get(log.getLong(JsonData.ANSWER_INCIDENT_ID)).toString());
                         job.put(JsonData.PARAM_INCIDENT_DATE, log.getString(JsonData.PARAM_INCIDENT_DATE));
                         items.put(job);
@@ -214,14 +221,18 @@ public class NewsActivity extends ListActivity implements RequestListener {
                     setListAdapter(new MagicAdapter(this, items, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
                             JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, null));
                 }
+                
+                dismissDialog(DIALOG_PROGRESS);
             }
+            
+            
 
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
-        dismissDialog(DIALOG_PROGRESS);
+        
     }
 
     class MagicAdapter extends JSONAdapter {
@@ -258,7 +269,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
                 String status = null;
                 try {
-                    JSONObject job = logList.get(position);
+                    JSONObject job = (JSONObject) logList.values().toArray()[getRealPositionOfItem(position)];// -getRealPositionOfItem(position));
                     if (Constants.DEBUGMODE) Log.d(Constants.PROJECT_TAG, "getView : incident id " + incident.id);
                     if (job != null) {
                         status = job.getString(JsonData.PARAM_STATUS);
@@ -296,8 +307,10 @@ public class NewsActivity extends ListActivity implements RequestListener {
                     iw.setImageResource(R.drawable.icn_incident_confirme);
                 } else if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(status)) {
                     iw.setImageResource(R.drawable.icn_incident_nonvalide);
+                    lock.add(incident.id);
                 } else if (JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(status)) {
                     iw.setImageResource(R.drawable.icn_incident_resolu2);
+                    lock.add(incident.id);
                 } else if (JsonData.PARAM_UPDATE_INCIDENT_NEW.equals(status)) {
                     iw.setImageResource(R.drawable.icn_creer);
                 } else if (JsonData.PARAM_UPDATE_INCIDENT_PHOTO.equals(status)) {
@@ -322,18 +335,28 @@ public class NewsActivity extends ListActivity implements RequestListener {
         i.putExtra("event", l.getAdapter().getItem(position).toString());
 
         try {
-            Incident incident = Incident.fromJSONObject(new JSONObject(l.getAdapter().getItem(position).toString()));
-            JSONObject job = logs.get(incident.id);
+            Incident incident = Incident.fromJSONObject(new JSONObject(((MagicAdapter) getListAdapter()).getItem(position).toString()));
+
+            if(lock.contains(incident.id)) return;
+           /* JSONObject job = (JSONObject) logList.values().toArray()[((MagicAdapter) getListAdapter()).getRealPositionOfItem(position)];
+
             if (job != null) {
                 if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(job.getString(JsonData.PARAM_STATUS))
                     || JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(job.getString(JsonData.PARAM_STATUS))) return;
-
-            }
+            } else if (incident.state == 'R') return;*/
 
         } catch (JSONException e) {
             Log.e(Constants.PROJECT_TAG, "JSONException in onListItemClick", e);
         }
-        startActivity(i);
+        startActivityForResult(i, 1);
+        //startActivity(i);
         // super.onListItemClick(l, v, position, id);
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        finish();
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        
     }
 }

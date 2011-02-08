@@ -88,6 +88,7 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
             default:
                 break;
         }
+        //overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     @Override

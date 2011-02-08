@@ -44,6 +44,8 @@ public class Incident {
     }
 
     public JSONObject updateIncidentRequest(Context c, String status) {
+        
+        if (Constants.DEBUGMODE) Log.d(Constants.PROJECT_TAG, "updateIncidentRequest : ");
         try {
             return new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_UPDATE_INCIDENT)
                                    .put(JsonData.PARAM_UPDATE_INCIDENT_LOG,

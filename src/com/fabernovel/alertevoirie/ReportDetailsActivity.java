@@ -93,19 +93,18 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
                 ((TextView) findViewById(R.id.TextView_address)).setText(currentIncident.address);
                 // imgd.setDefault_img(((ImageView) findViewById(R.id.ImageView_far)).getBackground());
-                
 
                 findViewById(R.id.existing_incident_solved).setOnClickListener(this);
                 findViewById(R.id.existing_incidents_confirmed).setOnClickListener(this);
                 findViewById(R.id.existing_incidents_add_picture).setOnClickListener(this);
                 findViewById(R.id.existing_incidents_invalid).setOnClickListener(this);
-                
-                if(currentIncident.confirms>1){
-                    ((TextView)findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms+" personnes confirment cet incident");
-                }else if(currentIncident.confirms==1){
-                    ((TextView)findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms+" personne confirme cet incident");
+
+                if (currentIncident.confirms > 1) {
+                    ((TextView) findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms + " personnes confirment cet incident");
+                } else if (currentIncident.confirms == 1) {
+                    ((TextView) findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms + " personne confirme cet incident");
                 }
-                
+
                 imgd.download((String) currentIncident.pictures_close.get(0), ((ImageView) findViewById(R.id.ImageView_close)));
                 imgd.download((String) currentIncident.pictures_far.get(0), ((ImageView) findViewById(R.id.ImageView_far)));
 
@@ -131,7 +130,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     @Override
     public void onClick(View v) {
-        Log.d(Constants.PROJECT_TAG, "onClick : "+v.getId());
+        Log.d(Constants.PROJECT_TAG, "onClick : " + v.getId());
         switch (v.getId()) {
             case R.id.ImageView_close:
                 takePicture(v);
@@ -210,7 +209,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 //$FALL-THROUGH$
             default:
                 break;
+                
+                
         }
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     private void loadComment(int what) {
@@ -465,17 +467,17 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     Toast.makeText(this, getString(R.string.server_error), Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
-                Log.e(Constants.PROJECT_TAG, "Error uploading image", e);
+                Log.e(Constants.PROJECT_TAG, "Erreur d'envoi d'image", e);
             }/*
               * catch (FileNotFoundException e) {
               * // TODO Auto-generated catch block
               * Log.e(Constants.PROJECT_TAG,"File not found",e);
               * }
               */
+
+            dismissDialog(DIALOG_PROGRESS);
         }
 
-        
-        dismissDialog(DIALOG_PROGRESS);
     }
 
     @Override
