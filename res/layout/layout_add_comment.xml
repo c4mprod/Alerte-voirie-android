@@ -39,5 +39,5 @@
         android:layout_marginTop="@dimen/ui_spacing_vertical"
         android:layout_marginBottom="@dimen/ui_spacing_vertical"
         android:layout_below="@id/TextView_remaining_chars"
-        android:layout_above="@id/Button_validate" />
+        android:layout_above="@id/Button_validate" android:maxLength="140"/>
 </RelativeLayout>

@@ -1,13 +1,24 @@
 package com.c4mprod.utils;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
-
-import com.fabernovel.alertevoirie.entities.Constants;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,43 +33,50 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.ImageView;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilterInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.ref.SoftReference;
-import java.lang.ref.WeakReference;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * This helper class download images from the Internet and binds those with the provided ImageView.
+ * A local cache of downloaded images is maintained internally to improve performance and on sdcard.
  * 
  * <p>
  * It requires the INTERNET permission, which should be added to your application's manifest file.
  * </p>
  * 
- * A local cache of downloaded images is maintained internally to improve performance.
+ * 
+ * 
+ * Inspired by {@link http://android-developers.blogspot.com/2010/07/multithreading-for-performance.html}
+ * 
+ * 
+ * @version 1.3
+ * @author Pierre-Michel Villa
+ * @author Alex Kirchen
+ * @author Gilles Debunne @ google
  */
 public class ImageDownloader {
-    private static final String LOG_TAG                   = "ImageDownloader";
-    private static final String state                     = Environment.getExternalStorageState();
-    private static final String folder                    = Environment.getExternalStorageDirectory().getPath() + Constants.SDCARD_PATH + "/Thumbs";
-
-    private boolean             mExternalStorageAvailable = false;
-    private boolean             mExternalStorageWriteable = false;
+    private static final String     LOG_TAG                   = "ImageDownloader";
+    private static final String     state                     = Environment.getExternalStorageState();
+    private String                  mfolder;
+    private String                  mSubfolder;
+    private boolean                 mExternalStorageAvailable = false;
+    private boolean                 mExternalStorageWriteable = false;
+    private ImageDownloaderListener listener                  = null;
 
     public enum Mode {
         NO_ASYNC_TASK, NO_DOWNLOADED_DRAWABLE, CORRECT
     }
 
-    private Bitmap default_img = null;
+    private BitmapDrawable default_img    = null;
 
-    private Mode   mode        = Mode.CORRECT;
+    // Always should be correct. Mode NO_ASYNC_TASK and NO_DOWNLOAD_DRAWABLE are for test purpose only
+    private Mode           mode           = Mode.CORRECT;
+    private boolean        keepBackground = true;
+
+    public ImageDownloader() {
+        this.listener = null;
+    }
+
+    public ImageDownloader(ImageDownloaderListener listener) {
+        this.listener = listener;
+    }
 
     /**
      * Download the specified image from the Internet and binds it to the provided ImageView. The
@@ -69,13 +87,44 @@ public class ImageDownloader {
      *            The URL of the image to download.
      * @param imageView
      *            The ImageView to bind the downloaded image to.
+     * 
+     * @see download(String url, ImageView imageView, String subfolder)
+     * 
      */
     public void download(String url, ImageView imageView) {
+        download(url, imageView, null);
+    }
+
+    /**
+     * Download the specified image from the Internet and binds it to the provided ImageView. The
+     * binding is immediate if the image is found in the cache and will be done asynchronously
+     * otherwise. A null bitmap will be associated to the ImageView if an error occurs.
+     * 
+     * @param url
+     * @param imageView
+     * @param subfolder
+     *            the subfolder in sdcard cache
+     * 
+     */
+    public void download(String url, ImageView imageView, String subfolder) {
+        if (subfolder != null) {
+            mSubfolder = "/" + subfolder;
+        } else {
+            mSubfolder = "";
+        }
+
+        mfolder = Environment.getExternalStorageDirectory().getPath() + "/Android/data/" + imageView.getContext().getPackageName() + "/files/images"
+                  + mSubfolder;
 
         if (Environment.MEDIA_MOUNTED.equals(state)) {
             // We can read and write the media
             mExternalStorageAvailable = mExternalStorageWriteable = true;
-            (new File(folder)).mkdirs();
+            try {
+                (new File(mfolder)).mkdirs();
+                (new File(mfolder + "/.nomedia")).createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
             // We can only read the media
             mExternalStorageAvailable = true;
@@ -95,16 +144,13 @@ public class ImageDownloader {
         } else {
             cancelPotentialDownload(url, imageView);
             imageView.setImageBitmap(bitmap);
+            imageView.setBackgroundDrawable(null);
+            if (listener != null) {
+                listener.onImageDownloaded(imageView, url, mfolder + "/" + URLEncoder.encode(url), imageView.getDrawable().getIntrinsicWidth(),
+                                           imageView.getDrawable().getIntrinsicWidth());
+            }
         }
     }
-
-    /*
-     * Same as download but the image is always downloaded and the cache is not used.
-     * Kept private at the moment as its interest is not clear.
-     * private void forceDownload(String url, ImageView view) {
-     * forceDownload(url, view, null);
-     * }
-     */
 
     /**
      * Same as download but the image is always downloaded and the cache is not used.
@@ -133,12 +179,9 @@ public class ImageDownloader {
 
                 case CORRECT:
                     task = new BitmapDownloaderTask(imageView);
-                    if (default_img == null) {
-                        DownloadedDrawable downloadedDrawable = new DownloadedDrawable(task);
-                        imageView.setImageDrawable(downloadedDrawable);
-                    } else {
-                        imageView.setImageBitmap(default_img);
-                    }
+                    imageView.setBackgroundDrawable((default_img));
+                    DownloadedDrawable downloadedDrawable = new DownloadedDrawable(task);
+                    imageView.setImageDrawable(downloadedDrawable);
 
                     imageView.setMinimumHeight(156);
                     task.execute(url);
@@ -185,16 +228,16 @@ public class ImageDownloader {
         return null;
     }
 
-    public Bitmap getDefault_img() {
+    public BitmapDrawable getDefault_img() {
         return default_img;
     }
 
-    public void setDefault_img(Bitmap default_img) {
-        this.default_img = default_img;
+    public void setDefault_img(Bitmap bitmap) {
+        this.default_img = new BitmapDrawable(bitmap);
     }
 
     public void setDefault_img(Drawable drawable) {
-        this.default_img = ((BitmapDrawable) drawable).getBitmap();
+        this.default_img = ((BitmapDrawable) drawable);
     }
 
     Bitmap downloadBitmap(String url) {
@@ -203,11 +246,13 @@ public class ImageDownloader {
         final HttpGet getRequest = new HttpGet(url);
 
         try {
+
+            // Log.i(Constants.PROJECT_TAG, "Downloading " + url);
             HttpResponse response = client.execute(getRequest);
             final int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode != HttpStatus.SC_OK) {
-                Log.w(Constants.PROJECT_TAG, "Error " + statusCode + " while retrieving bitmap from " + url);
-                return default_img;
+                // Log.w(Constants.PROJECT_TAG, "Error " + statusCode + " while retrieving bitmap from " + url);
+                return null;
             }
 
             final HttpEntity entity = response.getEntity();
@@ -226,7 +271,7 @@ public class ImageDownloader {
                     // Log.d(Constants.PROJECT_TAG, "got a thumbnail drawable: " + drawable.getBounds() + ", " + drawable.getIntrinsicHeight() + ","
                     // + drawable.getIntrinsicWidth() + ", " + drawable.getMinimumHeight() + "," + drawable.getMinimumWidth());
                     if (mExternalStorageWriteable) {
-                        File f = new File(folder, URLEncoder.encode(url).replace("http:", "http"));
+                        File f = new File(mfolder, URLEncoder.encode(url));
                         // Log.d(Constants.PROJECT_TAG, f.getPath());
                         if (f.createNewFile()) {
 
@@ -270,7 +315,7 @@ public class ImageDownloader {
                 ((AndroidHttpClient) client).close();
             }
         }
-        return default_img;
+        return null;
     }
 
     /*
@@ -338,6 +383,12 @@ public class ImageDownloader {
                 // Or if we don't use any bitmap to task association (NO_DOWNLOADED_DRAWABLE mode)
                 if ((this == bitmapDownloaderTask) || (mode != Mode.CORRECT)) {
                     imageView.setImageBitmap(bitmap);
+                    imageView.setBackgroundDrawable(null);
+
+                    if (listener != null) {
+                        listener.onImageDownloaded(imageView, url, mfolder + "/" + URLEncoder.encode(url), imageView.getDrawable().getIntrinsicWidth(),
+                                                   imageView.getDrawable().getIntrinsicHeight());
+                    }
                 }
             }
         }
@@ -394,8 +445,9 @@ public class ImageDownloader {
                                                                                                                                new SoftReference<Bitmap>(
                                                                                                                                                          eldest.getValue()));
                                                                                                           return true;
-                                                                                                      } else
+                                                                                                      } else {
                                                                                                           return false;
+                                                                                                      }
                                                                                                   }
                                                                                               };
 
@@ -433,14 +485,15 @@ public class ImageDownloader {
     private Bitmap getBitmapFromCache(String url) {
 
         if (mExternalStorageAvailable && url != null) {
-            File f = new File(folder, URLEncoder.encode(url).replace("http:", "http"));
+            File f = new File(mfolder, URLEncoder.encode(url));
 
             if (f.exists()) {
                 try {
                     return BitmapFactory.decodeFile(f.getPath());
 
                 } catch (Exception e) {
-                    Log.e(Constants.PROJECT_TAG, "Error in retrieving picture", e);
+                    // Log.e(Constants.PROJECT_TAG, "Error in retrieving picture", e);
+                    e.printStackTrace();
                 }
             }
         }
@@ -471,10 +524,10 @@ public class ImageDownloader {
                 }
             }
         } catch (Exception e) {
-            return default_img;
+            return null;
         }
 
-        return default_img;
+        return null;
     }
 
     /**

@@ -13,7 +13,7 @@ public class AVServiceErrorException extends Exception {
     
     @Override
     public String toString() {
-        return super.toString()+" ("+errorCode+") : "+getMessage();
+        return this.getClass().getCanonicalName()+" : "+errorCode+" - "+getMessage();
     }
 
     @Override
@@ -57,9 +57,34 @@ public class AVServiceErrorException extends Exception {
                 return "The user already confirm this incident";
             case 19:
                 return "The user already invalidate this incident";
+            case 20:
+                return "The authentication failed: bad login";
+            case 21:
+                return "Bad user login (userAuthentication)";
+            case 22:
+                return "Empty user login (userAuthentication)";
+            case 23:
+                return "Bad password (userAuthentication)";
+            case 24:
+                return "Empty password (userAuthentication)";
+            case 25:
+                return "Bad authentToken (userAuthentication)";
+            case 26:
+                return "Empty  authentToken (userAuthentication)";
+            case 27:
+                return "Bad radius (getIncidentByPosition)";
+            case 28:
+                return "Empty radius (getIncidentByPosition)";
+            case 29:
+                return "Bad incident picture content";
+            case 30:
+                return "Impossible to read the incident picture from the temp file";
+            case 31:
+                return "Bad json request token from application";
+
 
             default:
-                return null;
+                return "Unexpected error";
         }
     }
 }

@@ -5,44 +5,46 @@
 		android:layout_width="fill_parent"
 		android:orientation="vertical">
 		<ToggleButton
-				android:id="@+id/ToggleButton01"
 				android:text="@string/gps_map"
 				android:textOff="@string/gps_map"
 				android:textOn="@string/gps_map"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
-				android:layout_margin="5dip" />
+				android:layout_margin="5dip"
+				android:id="@+id/ToggleButton_Map" />
 		<RadioGroup
-				android:id="@+id/RadioGroup_tabs"
 				android:layout_height="wrap_content"
 				android:layout_width="fill_parent"
-				android:orientation="horizontal">
+				android:orientation="horizontal"
+				android:id="@+id/RadioGroup_tabs_map">
 				<RadioButton
 						android:text="N/A"
-						android:id="@+id/Tab_ongoing"
 						android:layout_width="107dip"
 						android:layout_height="wrap_content"
 						android:bufferType="spannable"
 						android:checked="true"
-						style="@style/Tab" />
+						style="@style/Tab"
+						android:id="@+id/Tab_Map_ongoing" />
 				<RadioButton
 						android:text="N/A"
-						android:id="@+id/Tab_updated"
 						android:layout_width="107dip"
 						android:layout_height="wrap_content"
 						android:bufferType="spannable"
-						style="@style/Tab" />
+						style="@style/Tab"
+						android:id="@+id/Tab_Map_updated" />
 				<RadioButton
 						android:text="N/A"
-						android:id="@+id/Tab_resolved"
 						android:layout_width="106dip"
 						android:layout_height="wrap_content"
 						android:bufferType="spannable"
-						style="@style/Tab" />
+						style="@style/Tab"
+						android:id="@+id/Tab_Map_resolved" />
 		</RadioGroup>
-		<ListView
-				android:layout_height="fill_parent"
+		<com.google.android.maps.MapView
+				android:id="@+id/MapView_mymap"
+				android:clickable="true"
 				android:layout_width="fill_parent"
-				style="@style/ListCustom"
+				android:layout_height="fill_parent"
+				android:apiKey="@string/map_api_key"
 				android:visibility="visible" />
 </LinearLayout>

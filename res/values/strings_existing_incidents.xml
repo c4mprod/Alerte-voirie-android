@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="existing_incidents_title">"Nouveau rapport"</string>
-    <string name="existing_incidents_button_validate">"Non, déclarer mon incident"</string>
-    <string name="existing_incidents_header">"L'incident est-il déjà déclaré ?"</string>
+		<string
+				name="existing_incidents_title">"Nouveau rapport"</string>
+				
+				<string
+				name="incidents_title">"Carte des incidents"</string>
+		<string
+				name="existing_incidents_button_validate">"Non, déclarer mon incident"</string>
+		<string
+				name="existing_incidents_header">"L'incident est-il déjà déclaré ?"</string>
+		<string
+				name="existing_incidents_invalid">"Incident non-valide"</string>
+		<string
+				name="existing_incidents_solved">"Résolu"</string>
+		<string
+				name="existing_incidents_confirmed">"Confirmer"</string>
+		<string
+				name="existing_incidents_add_picture">"Ajouter une photo"</string>
+		<string
+				name="existing_incidents_status">"Personne n'a confirmé cet incident"</string>
 </resources>

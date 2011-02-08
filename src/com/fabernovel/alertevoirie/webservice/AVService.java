@@ -25,6 +25,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Context;
@@ -32,6 +34,8 @@ import android.os.AsyncTask;
 
 import com.fabernovel.alertevoirie.R;
 import com.fabernovel.alertevoirie.entities.Constants;
+import com.fabernovel.alertevoirie.entities.JsonData;
+
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
@@ -87,6 +91,7 @@ public class AVService {
             try {
                 return req.sendRequest();
             } catch (AVServiceErrorException e) {
+                Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in QueryTask", e);
                 exception = e;
                 return null;
             }
@@ -95,7 +100,23 @@ public class AVService {
         @Override
         protected void onPostExecute(String result) {
             if (exception == null) {
-                listener.onRequestcompleted(REQUEST_JSON, result);
+                try {
+                    JSONArray jo = new JSONArray(result);
+                    int resultnum = jo.getJSONObject(0).getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS);
+                    Log.i(Constants.PROJECT_TAG, "AV Status:" + resultnum);
+                    if (resultnum != 0) throw new AVServiceErrorException(resultnum);
+                    listener.onRequestcompleted(REQUEST_JSON, result);
+
+                } catch (JSONException e) {
+                    Log.e(Constants.PROJECT_TAG, "JSONException in onPostExecute", e);
+                    toastServerError();
+                    listener.onRequestcompleted(REQUEST_ERROR, e);
+                } catch (AVServiceErrorException e) {
+                    Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in onPostExecute", e);
+                    toastServerError();
+                    listener.onRequestcompleted(REQUEST_ERROR, e);
+                }
+
             } else {
                 toastServerError();
 
@@ -126,18 +147,20 @@ public class AVService {
         ArrayList<Object> image_1 = new ArrayList<Object>();
         ArrayList<Object> image_2 = new ArrayList<Object>();
 
-        image_1.add(AV_URL + "photo/");
-        image_1.add(udid);
-        try {
-            image_1.add(Base64.encodeToString(img_comment.getBytes("UTF-8"), Base64.NO_WRAP));// .replace("=", "%3D"));
-        } catch (UnsupportedEncodingException e) {
-            Log.e(Constants.PROJECT_TAG, "UTF-8 not supported", e);
-            image_1.add(Base64.encodeToString(img_comment.getBytes(), Base64.NO_WRAP));// .replace("=", "%3D"));
+        if (image_far != null) {
+            image_1.add(AV_URL + "photo/");
+            image_1.add(udid);
+            try {
+                image_1.add(Base64.encodeToString(img_comment.getBytes("UTF-8"), Base64.NO_WRAP));// .replace("=", "%3D"));
+            } catch (UnsupportedEncodingException e) {
+                Log.e(Constants.PROJECT_TAG, "UTF-8 not supported", e);
+                image_1.add(Base64.encodeToString(img_comment.getBytes(), Base64.NO_WRAP));// .replace("=", "%3D"));
+            }
+            image_1.add(incident_id);
+            image_1.add(AV_IMG_FAR);
+            image_1.add(image_far);
         }
-        image_1.add(incident_id);
-        image_1.add(AV_IMG_FAR);
-        image_1.add(image_far);
-
+        
         image_2.add(AV_URL + "photo/");
         image_2.add(udid);
         image_2.add("");
@@ -146,7 +169,12 @@ public class AVService {
         image_2.add(image_near);
 
         cancelTask();
-        currentTask = new postImage().execute(image_1, image_2);
+
+        if (image_far != null) {
+            currentTask = new postImage().execute(image_1, image_2);
+        } else {
+            currentTask = new postImage().execute(image_2);
+        }
 
     }
 
@@ -213,7 +241,7 @@ public class AVService {
 
                     httpPost.setEntity(file);
 
-                    // Log.d(Constants.PROJECT_TAG,convertStreamToString(httpPost.getEntity().getContent()));
+                    Log.d(Constants.PROJECT_TAG, convertStreamToString(httpPost.getEntity().getContent()));
 
                     response[i++] = httpClient.execute(httpPost, localContext);
 
@@ -221,6 +249,8 @@ public class AVService {
                     Log.e(Constants.PROJECT_TAG, "IOException postImage", e);
                 } catch (IllegalStateException e) {
                     Log.e(Constants.PROJECT_TAG, "IllegalStateException postImage", e);
+                } catch (AVServiceErrorException e) {
+                    Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in doInBackground", e);
                 }
             }
             return response;
@@ -230,16 +260,27 @@ public class AVService {
         protected void onPostExecute(HttpResponse[] result) {
 
             try {
-                Log.d(Constants.PROJECT_TAG, "Result post image 1: " + convertStreamToString(result[0].getEntity().getContent()));
-                Log.d(Constants.PROJECT_TAG, "Result post image 2: " + convertStreamToString(result[1].getEntity().getContent()));
 
-            } catch (IllegalStateException e) {
-                Log.e(Constants.PROJECT_TAG, "IllegalStateException", e);
-            } catch (AVServiceErrorException e) {
-                Log.e(Constants.PROJECT_TAG, "AVServiceErrorException", e);
-            } catch (IOException e) {
-                Log.e(Constants.PROJECT_TAG, "IOException", e);
-            }
+                    JSONArray jo = new JSONArray(convertStreamToString(result[0].getEntity().getContent()));
+                    int resultnum = jo.getJSONObject(0).getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS);
+                    Log.i(Constants.PROJECT_TAG, "AV Status:" + resultnum);
+                    if (resultnum != 0) throw new AVServiceErrorException(resultnum);
+
+                } catch (JSONException e) {
+                    Log.e(Constants.PROJECT_TAG, "JSONException in onPostExecute", e);
+                    toastServerError();
+                    listener.onRequestcompleted(REQUEST_ERROR, e);
+                } catch (AVServiceErrorException e) {
+                    Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in onPostExecute", e);
+                    toastServerError();
+                    listener.onRequestcompleted(REQUEST_ERROR, e);
+                } catch (IllegalStateException e) {
+                    Log.e(Constants.PROJECT_TAG,"IllegalStateException in onPostExecute",e);
+                } catch (IOException e) {
+                    Log.e(Constants.PROJECT_TAG,"IOException in onPostExecute",e);
+                }
+
+
             super.onPostExecute(result);
         }
     }

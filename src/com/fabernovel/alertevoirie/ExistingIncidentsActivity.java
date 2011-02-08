@@ -21,9 +21,11 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
+import android.widget.ListView;
 
 import com.c4mprod.utils.ImageDownloader;
 import com.fabernovel.alertevoirie.entities.Constants;
+import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.entities.Last_Location;
@@ -43,7 +45,20 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
         setContentView(R.layout.layout_existing_incidents);
         getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.icon_nouveau_rapport);
 
+        // init button
+        findViewById(R.id.Button_validate).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(new Intent(ExistingIncidentsActivity.this, SelectCategoryActivity.class), 0);
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
         try {
+
+            showDialog(DIALOG_PROGRESS);
             JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_INCIDENTS_BY_POSITION)
                                                  .put(JsonData.PARAM_UDID, Utils.getUdid(this))
                                                  .put(JsonData.PARAM_RADIUS, JsonData.VALUE_RADIUS_CLOSE)
@@ -53,19 +68,10 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
 
             AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
 
-            showDialog(DIALOG_PROGRESS);
-
         } catch (JSONException e) {
             Log.e(Constants.PROJECT_TAG, "Error loading existing incidents", e);
         }
-
-        // init button
-        findViewById(R.id.Button_validate).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(new Intent(ExistingIncidentsActivity.this, SelectCategoryActivity.class), 0);
-            }
-        });
+        super.onResume();
     }
 
     @Override
@@ -107,7 +113,7 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                 if (JsonData.VALUE_REQUEST_GET_INCIDENTS_BY_POSITION.equals(response.getString(JsonData.PARAM_REQUEST))) {
                     JSONArray items = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_CLOSEST_INCIDENTS);
                     setListAdapter(new MagicAdapter(this, items, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
-                            JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, JsonData.PARAM_INCIDENT_OBJECT));
+                            JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }));
                 }
             }
         } catch (JSONException e) {
@@ -136,8 +142,8 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
     }
 
     class MagicAdapter extends JSONAdapter {
-        public MagicAdapter(Context context, JSONArray data, int cellLayout, String[] from, int[] to, String jsonObjectName) {
-            super(context, data, cellLayout, from, to, jsonObjectName);
+        public MagicAdapter(Context context, JSONArray data, int cellLayout, String[] from, int[] to) {
+            super(context, data, cellLayout, from, to, null);
         }
 
         @Override
@@ -152,16 +158,19 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
 
             String imgName = null;
             try {
-                JSONArray imgarr = ((JSONObject) getItem(position)).getJSONObject(JsonData.PARAM_INCIDENT_PICTURES)
-                                                                   .getJSONArray(JsonData.PARAM_INCIDENT_PICTURES_FAR);
+
+                Incident incident = Incident.fromJSONObject(((JSONObject) getItem(position)));
+
+                Log.i(Constants.PROJECT_TAG, "getView : incident" + incident);
+
+                JSONArray imgarr = incident.pictures_far;
 
                 if (imgarr.length() > 0) {
                     imgName = imgarr.getString(0);
                 }
 
                 if (imgName == null) {
-                    imgarr = ((JSONObject) getItem(position)).getJSONObject(JsonData.PARAM_INCIDENT_PICTURES)
-                                                             .getJSONArray(JsonData.PARAM_INCIDENT_PICTURES_CLOSE);
+                    imgarr = incident.pictures_close;
 
                     if (imgarr.length() > 0) {
                         imgName = imgarr.getString(0);
@@ -174,14 +183,12 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                 }
                 imageDownloader.download(imgName, icone);
 
-                String state = ((JSONObject) getItem(position)).getString(JsonData.PARAM_INCIDENT_STATUS);
-                
-                Log.d(Constants.PROJECT_TAG,state);
+                char state = incident.state;
 
-                ((ImageView) v.findViewById(R.id.ImageView_icn)).setImageDrawable(state.equalsIgnoreCase("O") ? getResources().getDrawable(R.drawable.icn_incident_nonvalide)
-                                                                                                           : state.equalsIgnoreCase("U") ? getResources().getDrawable(R.drawable.icn_photo_ajoutee)
-                                                                                                                                        : state.equalsIgnoreCase("R") ? getResources().getDrawable(R.drawable.icn_incident_resolu2)
-                                                                                                                                                                     : null);
+                ((ImageView) v.findViewById(R.id.ImageView_icn)).setImageDrawable(incident.invalidations > 0 ? getResources().getDrawable(R.drawable.icn_incident_nonvalide)
+                                                                                                            : incident.confirms > 0 ? getResources().getDrawable(R.drawable.icn_incident_confirme)
+                                                                                                                                   : state == 'R' ? getResources().getDrawable(R.drawable.icn_incident_resolu2)
+                                                                                                                                                 : getResources().getDrawable(R.drawable.icn_creer));
                 // ImageManager.fetchDrawableOnThread(imgName, icone, icone.getDrawable());
 
             } catch (JSONException e) {
@@ -219,6 +226,23 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
     public void onProviderDisabled(String provider) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        // Log.d(Constants.PROJECT_TAG, "onListItemClick : "+l.getAdapter().getItem(position));
+        Intent i = new Intent(this, ReportDetailsActivity.class);
+        i.putExtra("existing", true);
+        i.putExtra("event", l.getAdapter().getItem(position).toString());
+
+        try {
+            Incident incident = Incident.fromJSONObject(new JSONObject(l.getAdapter().getItem(position).toString()));
+            if (incident.state == 'R' || incident.invalidations > 0) return;
+        } catch (JSONException e) {
+            Log.e(Constants.PROJECT_TAG, "JSONException in onListItemClick", e);
+        }
+        startActivity(i);
+        // super.onListItemClick(l, v, position, id);
     }
 
 }

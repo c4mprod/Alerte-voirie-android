@@ -1,6 +1,5 @@
 package com.fabernovel.alertevoirie.utils;
 
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,7 +50,7 @@ public class JSONAdapter extends BaseAdapter {
 
         categories = new SparseArray<String>(2);
 
-        for (int i = 0, j = 0; i < data.length(); i++, j++) {
+        if (data != null) for (int i = 0, j = 0; i < data.length(); i++, j++) {
             String cat = getCategoryOfItem(i);
             Log.d(Constants.PROJECT_TAG, "catégorie : " + cat);
             if (!cat.equals(currentCat)) {
@@ -63,11 +62,15 @@ public class JSONAdapter extends BaseAdapter {
         }
     }
 
-    
-
     protected String getCategoryOfItem(int itemId) {
         try {
-            return data.getJSONObject(itemId).getJSONObject(jsonObjectName).getString(categoryField);
+            if(jsonObjectName!=null)
+            {
+                return data.getJSONObject(itemId).getJSONObject(jsonObjectName).getString(categoryField);
+            }else
+            {
+                return data.getJSONObject(itemId).getString(categoryField);
+            }
         } catch (JSONException e) {
             Log.e(Constants.PROJECT_TAG, "category error", e);
             return null;

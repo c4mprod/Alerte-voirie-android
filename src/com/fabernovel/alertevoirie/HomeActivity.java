@@ -11,7 +11,6 @@ import com.fabernovel.alertevoirie.utils.LocationHelper;
 import com.fabernovel.alertevoirie.utils.Utils;
 import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
-import com.google.android.maps.GeoPoint;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -34,8 +33,16 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
     private static final int DIALOG_PROGRESS = 0;
     private LocationManager  locationManager;
     private Location         lastlocation;
-    private static boolean   handled         = false;
     private boolean          dialog_shown    = false;
+    private Handler          myHandler       = new Handler();
+    private Runnable         removeUpdate    = new Runnable() {
+                                                 @Override
+                                                 public void run() {
+                                                     AVService.getInstance(HomeActivity.this).toastServerError(HomeActivity.this.getString(R.string.gps_error));
+                                                     locationManager.removeUpdates(HomeActivity.this);
+                                                     handleNewLocation(lastlocation);
+                                                 }
+                                             };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,22 +57,13 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
         findViewById(R.id.Button_news).setOnClickListener(this);
         findViewById(R.id.Button_reports).setOnClickListener(this);
         findViewById(R.id.Button_new_incident).setOnClickListener(this);
+        findViewById(R.id.Button_incidents).setOnClickListener(this);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         lastlocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
 
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (!handled) {
-                    AVService.getInstance(HomeActivity.this).toastServerError(HomeActivity.this.getString(R.string.gps_error));
-                    locationManager.removeUpdates(HomeActivity.this);
-                    handleNewLocation(lastlocation);
-                }
-            }
-        }, 30000);
+        myHandler.postDelayed(removeUpdate, 30000);
 
     }
 
@@ -74,16 +72,17 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
         switch (v.getId()) {
             case R.id.Button_news:
                 startActivity(new Intent(this, NewsActivity.class));
-                // startActivity(new Intent(this, ExistingIncidentsActivity.class));
                 break;
             case R.id.Button_reports:
-                startActivity(new Intent(this, MyIncidentsActivity.class));
+                startActivity((new Intent(this, MyIncidentsActivity.class)));
+                break;
+            case R.id.Button_incidents:
+                startActivity((new Intent(this, IncidentsActivityMap.class)));
                 break;
             case R.id.Button_new_incident:
                 Intent i = new Intent(this, ExistingIncidentsActivity.class);
                 i.putExtra(Constants.NEW_REPORT, true);
                 startActivity(i);
-                // startActivity(new Intent(this, ReportDetailsActivity.class));
                 break;
 
             default:
@@ -96,7 +95,7 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
         if (LocationHelper.isBetterLocation(location, lastlocation)) {
             handleNewLocation(location);
             locationManager.removeUpdates(this);
-            handled = true;
+            myHandler.removeCallbacks(removeUpdate);
         }
 
     }
@@ -105,25 +104,20 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
         lastlocation = location;
 
         try {
-            GeoPoint newGeo = LocationHelper.geoFromLocation(lastlocation);
 
-            Last_Location.longitude = newGeo.getLongitudeE6() / 1E6;
-            Last_Location.latitude = newGeo.getLatitudeE6() / 1E6;
+            Last_Location.longitude = location.getLongitude();
+            Last_Location.latitude = location.getLatitude();
 
             JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_INCIDENTS_STATS)
                                                  .put(JsonData.PARAM_UDID, Utils.getUdid(this))
                                                  .put(JsonData.PARAM_POSITION,
                                                       new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, Last_Location.longitude)
                                                                       .put(JsonData.PARAM_POSITION_LATITUDE, Last_Location.latitude));
-
             AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
-
         } catch (JSONException e) {
             Log.e(Constants.PROJECT_TAG, "Error loading existing incidents", e);
-            // dismissDialog(DIALOG_PROGRESS);
         } catch (NullPointerException e) {
             Log.e(Constants.PROJECT_TAG, "Nullpointer Error", e);
-            // dismissDialog(DIALOG_PROGRESS);
         }
 
     }
@@ -131,19 +125,16 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void onProviderEnabled(String provider) {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void onProviderDisabled(String provider) {
-        // TODO Auto-generated method stub
-
+        AVService.getInstance(HomeActivity.this).toastServerError(HomeActivity.this.getString(R.string.gps_error));
     }
 
     @Override
@@ -178,17 +169,22 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
     public void onRequestcompleted(int requestCode, Object result) {
         try {
             JSONArray responses;
+            Log.d(Constants.PROJECT_TAG, (String) result);
             responses = new JSONArray((String) result);
+
             JSONObject response = responses.getJSONObject(0);
 
             if (requestCode == AVService.REQUEST_JSON) {
                 if (JsonData.VALUE_REQUEST_GET_INCIDENTS_STATS.equals(response.getString(JsonData.PARAM_REQUEST))) {
+                    Last_Location.Incidents = response.getJSONObject(JsonData.PARAM_ANSWER);
                     int resolved_incidents = response.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_RESOLVED_INCIDENTS);
                     int ongoing_incidents = response.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_ONGOING_INCIDENTS);
                     int updated_incidents = response.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_UPDATED_INCIDENTS);
 
                     if (resolved_incidents > 2) {
-                        ((TextView) findViewById(R.id.Home_TextView_Solved)).setText(((String) ((TextView) findViewById(R.id.Home_TextView_Solved)).getText()).replace("u",
+                        ((TextView) findViewById(R.id.Home_TextView_Solved)).setText(((String) ((TextView) findViewById(R.id.Home_TextView_Solved)).getText()).replace("us",
+                                                                                                                                                                       "u")
+                                                                                                                                                              .replace("u",
                                                                                                                                                                        "us"));
                     }
 

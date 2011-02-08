@@ -170,13 +170,14 @@ public class PictoView extends ImageView {
     public Bitmap setSupport(Bitmap picture, float coeffx, float coeffy, Context c) throws FileNotFoundException {
 
         // 320*480
-        int arrow_x = (int) (((getWidth() / 2)) * coeffx);
-        int arrow_y = (int) (((getHeight() / 2)) * coeffy);
+  
         int width = this.getDrawable().getIntrinsicWidth();
         int height = this.getDrawable().getIntrinsicHeight();
+        int arrow_x = (int) ((getWidth()-width)/2 * coeffx);
+        int arrow_y = (int) ((getHeight()-height)/2 * coeffy);
 
-        Bitmap arrow = Bitmap.createBitmap(((BitmapDrawable) this.getDrawable()).getBitmap(), 0, 0, width, height);
-
+        Bitmap arrow = ((BitmapDrawable) this.getDrawable()).getBitmap();//Bitmap.createBitmap(((BitmapDrawable) this.getDrawable()).getBitmap(), 0, 0, width, height);
+        
         /*
          * if (picture.getWidth() > picture.getHeight()) {
          * Matrix m = new Matrix();
@@ -187,6 +188,7 @@ public class PictoView extends ImageView {
 
         // createa matrix for the manipulation
         Matrix matrix = new Matrix();
+        
         // rotate the Bitmap
         matrix.postRotate(degree, (getWidth() / 2) + newcenterx, (getHeight() / 2) + newcentery);
 

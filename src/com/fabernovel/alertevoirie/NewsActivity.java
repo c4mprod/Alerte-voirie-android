@@ -2,7 +2,9 @@ package com.fabernovel.alertevoirie;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.TreeMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,6 +15,7 @@ import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.os.Bundle;
@@ -22,16 +25,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.RadioGroup;
 
 import com.fabernovel.alertevoirie.entities.Constants;
+import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.JsonData;
+import com.fabernovel.alertevoirie.entities.Last_Location;
 import com.fabernovel.alertevoirie.utils.JSONAdapter;
 import com.fabernovel.alertevoirie.utils.Utils;
 import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
 
 public class NewsActivity extends ListActivity implements RequestListener {
-    private static final int DIALOG_PROGRESS = 0;
+    private static final int          DIALOG_PROGRESS = 0;
+    private JSONObject                response;
+    private TreeMap<Long, JSONObject> logs;
+    private ArrayList<JSONObject>     logList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,21 +50,23 @@ public class NewsActivity extends ListActivity implements RequestListener {
         setContentView(R.layout.layout_report_lists);
         getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.icon_autour_de_vous);
 
+        findViewById(R.id.RadioGroup_tabs).setVisibility(View.GONE);
+        findViewById(R.id.ToggleButton01).setVisibility(View.GONE);
+
         try {
-            JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_INCIDENTS_BY_POSITION)
-                                                 .put(JsonData.PARAM_UDID, Utils.getUdid(this))
-                                                 .put(JsonData.PARAM_RADIUS, JsonData.VALUE_RADIUS_FAR)
+            JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_USERS_ACTVITIES)
+            // .put(JsonData.PARAM_UDID, Utils.getUdid(this))
+            // .put(JsonData.PARAM_RADIUS, JsonData.VALUE_RADIUS_FAR)
                                                  .put(JsonData.PARAM_POSITION,
-                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, "5.36628").put(JsonData.PARAM_POSITION_LATITUDE,
-                                                                                                                             "43.30957"));
+                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, Last_Location.longitude)
+                                                                      .put(JsonData.PARAM_POSITION_LATITUDE, Last_Location.latitude));
 
             AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
 
             showDialog(DIALOG_PROGRESS);
 
         } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Log.e(Constants.PROJECT_TAG, "error in onCreate : JSONException", e);
         }
 
     }
@@ -155,15 +167,55 @@ public class NewsActivity extends ListActivity implements RequestListener {
         try {
             JSONArray responses;
             responses = new JSONArray((String) result);
-            JSONObject response = responses.getJSONObject(0);
+            response = responses.getJSONObject(0);
+            TreeMap<Long, JSONObject> events = new TreeMap<Long, JSONObject>();
 
             if (requestCode == AVService.REQUEST_JSON) {
-                if (JsonData.VALUE_REQUEST_GET_INCIDENTS_BY_POSITION.equals(response.getString(JsonData.PARAM_REQUEST))) {
-                    JSONArray items = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_CLOSEST_INCIDENTS);
+
+                logs = new TreeMap<Long, JSONObject>();
+                logList = new ArrayList<JSONObject>();
+                for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_INCIDENT_LOG).length(); i++) {
+                    JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_INCIDENT_LOG).getJSONObject(i);
+                    logs.put(job.getLong(JsonData.ANSWER_INCIDENT_ID), job);
+                    logList.add(job);
+                }
+
+                if (JsonData.VALUE_REQUEST_GET_USERS_ACTVITIES.equals(response.getString(JsonData.PARAM_REQUEST))) {
+
+                    JSONArray items = new JSONArray();
+
+                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS).length(); i++) {
+                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                 .getJSONArray(JsonData.PARAM_ONGOING_INCIDENTS).getJSONObject(i);
+                        if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);// items.put(job);
+                    }
+
+                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS).length(); i++) {
+                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                 .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS).getJSONObject(i);
+                        if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);
+                    }
+
+                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS).length(); i++) {
+                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                 .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS).getJSONObject(i);
+                        if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);
+                    }
+
+                    for (JSONObject log : logList) {
+                        JSONObject job = new JSONObject(events.get(log.getLong(JsonData.ANSWER_INCIDENT_ID)).toString());
+                        job.put(JsonData.PARAM_INCIDENT_DATE, log.getString(JsonData.PARAM_INCIDENT_DATE));
+                        items.put(job);
+                    }
+
                     setListAdapter(new MagicAdapter(this, items, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
-                            JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, JsonData.PARAM_INCIDENT_OBJECT));
+                            JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, null));
                 }
             }
+
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -184,11 +236,11 @@ public class NewsActivity extends ListActivity implements RequestListener {
             Log.d(Constants.PROJECT_TAG, date);
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            
-            new Date(10,10,10);
+
+            new Date(10, 10, 10);
 
             try {
-                return ((String) DateFormat.format("MMMM yyyy", sdf.parse(date)));
+                return ((String) DateFormat.format("d MMMM yyyy", sdf.parse(date)));
             } catch (ParseException e) {
                 Log.e(Constants.PROJECT_TAG, "Error parsing date", e);
             }
@@ -199,10 +251,22 @@ public class NewsActivity extends ListActivity implements RequestListener {
         public View getView(int position, View convertView, ViewGroup parent) {
             View v = super.getView(position, convertView, parent);
             if (getItemViewType(position) == TYPE_ITEM) {
-                ImageView iw = (ImageView) v.findViewById(R.id.ImageView_icon);
+                ImageView iw = (ImageView) v.findViewById(R.id.ImageView_icn);
+                iw.setVisibility(View.VISIBLE);
                 JSONObject item = (JSONObject) getItem(position);
+                Incident incident = Incident.fromJSONObject(item);
+
+                String status = null;
                 try {
-                    switch (item.getString(JsonData.PARAM_INCIDENT_STATUS).charAt(0)) {
+                    JSONObject job = logList.get(position);
+                    if (Constants.DEBUGMODE) Log.d(Constants.PROJECT_TAG, "getView : incident id " + incident.id);
+                    if (job != null) {
+                        status = job.getString(JsonData.PARAM_STATUS);
+                    }
+
+                } catch (JSONException e) {
+                    Log.e(Constants.PROJECT_TAG, "JSONException in getView", e);
+                    switch (incident.state) {
                         case 'O':
                             iw.setImageResource(R.drawable.icn_creer);
                             break;
@@ -215,12 +279,61 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
                         default:
                             break;
+
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+
+                    if (incident.confirms > 0) {
+                        iw.setImageResource(R.drawable.icn_incident_confirme);
+                    }
+
+                    if (incident.invalidations > 0) {
+                        iw.setImageResource(R.drawable.icn_incident_nonvalide);
+                    }
+
                 }
+
+                if (JsonData.PARAM_UPDATE_INCIDENT_CONFIRMED.equals(status)) {
+                    iw.setImageResource(R.drawable.icn_incident_confirme);
+                } else if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(status)) {
+                    iw.setImageResource(R.drawable.icn_incident_nonvalide);
+                } else if (JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(status)) {
+                    iw.setImageResource(R.drawable.icn_incident_resolu2);
+                } else if (JsonData.PARAM_UPDATE_INCIDENT_NEW.equals(status)) {
+                    iw.setImageResource(R.drawable.icn_creer);
+                } else if (JsonData.PARAM_UPDATE_INCIDENT_PHOTO.equals(status)) {
+                    iw.setImageResource(R.drawable.icn_photo_ajoutee);
+                } else {
+                    iw.setVisibility(View.INVISIBLE);
+                }
+
+                ((ImageView) v.findViewById(R.id.ImageView_icon)).setVisibility(View.GONE);
+
+                ((ImageView) v.findViewById(R.id.ImageView_icon)).setImageBitmap(null);
             }
             return v;
         }
+    }
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        // Log.d(Constants.PROJECT_TAG, "onListItemClick : "+l.getAdapter().getItem(position));
+        Intent i = new Intent(this, ReportDetailsActivity.class);
+        i.putExtra("existing", true);
+        i.putExtra("event", l.getAdapter().getItem(position).toString());
+
+        try {
+            Incident incident = Incident.fromJSONObject(new JSONObject(l.getAdapter().getItem(position).toString()));
+            JSONObject job = logs.get(incident.id);
+            if (job != null) {
+                if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(job.getString(JsonData.PARAM_STATUS))
+                    || JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(job.getString(JsonData.PARAM_STATUS))) return;
+
+            }
+
+        } catch (JSONException e) {
+            Log.e(Constants.PROJECT_TAG, "JSONException in onListItemClick", e);
+        }
+        startActivity(i);
+        // super.onListItemClick(l, v, position, id);
     }
 }

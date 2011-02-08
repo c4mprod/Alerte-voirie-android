@@ -66,7 +66,8 @@ public class SelectZoomDetail extends Activity {
 
                     Log.d(Constants.PROJECT_TAG, "Margin: " + (((photo.getWidth() + layout_with) / 2) - photo.getWidth()) * photo.getWidth() / photo_width
                                                  + "," + (((photo.getHeight() + layout_height) / 2) - photo.getHeight()) * photo.getHeight() / photo_heigth);
-                    picto.setSupport(picture, photo_width / photo.getWidth(), photo_heigth / photo.getHeight(), SelectZoomDetail.this.getApplicationContext());
+                    if (Constants.DEBUGMODE) Log.d(Constants.PROJECT_TAG, "onClick : Photo widht/height"+photo.getWidth()+"/"+photo.getHeight()+" ImageView: "+photo_width+"/"+photo_heigth);
+                    picto.setSupport(picture,  photo.getWidth()/photo_width, photo.getHeight()/photo_heigth, SelectZoomDetail.this.getApplicationContext());
 
                     Intent data = new Intent();
                     data.putExtra("comment",((EditText) SelectZoomDetail.this.findViewById(R.id.Comment_img)).getText().toString());
