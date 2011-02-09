@@ -178,7 +178,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
 
                         }
                         data = answer.getJSONObject(JsonData.PARAM_INCIDENTS);
-                    } catch (Exception e) {
+                    } catch (JSONException e) {
                         Log.e(Constants.PROJECT_TAG, "Exception", e);
                         finish();
                         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
@@ -252,7 +252,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
     private void setAdapterForTab(int tab) {
 
         try {
-            Log.d(Constants.PROJECT_TAG, data.getJSONArray(INCIDENTS[tab]).toString());
+            //Log.d(Constants.PROJECT_TAG, data.getJSONArray(INCIDENTS[tab]).toString());
 
             setListAdapter(new JSONAdapter(this, data.getJSONArray(INCIDENTS[tab]), R.layout.cell_report_noicon, new String[] {
                     JsonData.PARAM_INCIDENT_DESCRIPTION, JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, null,
@@ -269,7 +269,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
                     // return date;
                 }
             });
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e(Constants.PROJECT_TAG, "JSONException in setAdapterForTab", e);
         }
 

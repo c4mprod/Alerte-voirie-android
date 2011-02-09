@@ -5,6 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.FileNameMap;
+import java.net.URI;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import net.londatiga.android.ActionItem;
 import net.londatiga.android.QuickAction;
@@ -14,13 +20,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -32,6 +42,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -82,6 +93,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         // init title
         getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.icon_nouveau_rapport);
         getWindow().setTitle(getString(R.string.report_detail_new_report_title));
+        
+        findViewById(R.id.LinearLayout_comment).setVisibility(View.GONE);
 
         if (getIntent().getBooleanExtra("existing", false)) {
             findViewById(R.id.Button_validate).setVisibility(View.GONE);
@@ -98,6 +111,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 findViewById(R.id.existing_incidents_confirmed).setOnClickListener(this);
                 findViewById(R.id.existing_incidents_add_picture).setOnClickListener(this);
                 findViewById(R.id.existing_incidents_invalid).setOnClickListener(this);
+
+                if (currentIncident.description != null && currentIncident.description.length()>0) {
+                    findViewById(R.id.LinearLayout_comment).setVisibility(View.VISIBLE);
+                }
 
                 if (currentIncident.confirms > 1) {
                     ((TextView) findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms + " personnes confirment cet incident");
@@ -133,21 +150,61 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         Log.d(Constants.PROJECT_TAG, "onClick : " + v.getId());
         switch (v.getId()) {
             case R.id.ImageView_close:
-                takePicture(v);
+                final ActionItem actionPhoto = new ActionItem();
+                final ActionItem actionGallery = new ActionItem();
+                final QuickAction qax = new QuickAction(v);
+
+                actionPhoto.setTitle("Prendre une photo");
+                // chart.setIcon(getResources().getDrawable(R.drawable.chart));
+                actionPhoto.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        takePicture(0, R.id.ImageView_close);
+                        qax.dismiss();
+                    }
+                });
+
+                actionGallery.setTitle("Choisir un fichier");
+                // production.setIcon(getResources().getDrawable(R.drawable.production));
+                actionGallery.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        takePicture(1, R.id.ImageView_close);
+                        qax.dismiss();
+
+                    }
+                });
+
+                qax.addActionItem(actionPhoto);
+                qax.addActionItem(actionGallery);
+                qax.setAnimStyle(QuickAction.ANIM_AUTO);
+
+                qax.show();
                 break;
             case R.id.ImageView_far:
 
                 if (hasPic) {
+                    final QuickAction qa = new QuickAction(v);
                     final ActionItem actionNew = new ActionItem();
+                    final ActionItem actionNew2 = new ActionItem();
                     final ActionItem actionModif = new ActionItem();
-                    final View button = v;
 
-                    actionNew.setTitle("Nouvelle image");
-                    // chart.setIcon(getResources().getDrawable(R.drawable.chart));
+                    actionNew.setTitle("Nouvelle image\n(APN)");
                     actionNew.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            takePicture(button);
+                            takePicture(0, R.id.ImageView_far);
+                            qa.dismiss();
+
+                        }
+                    });
+
+                    actionNew2.setTitle("Nouvelle image\n(Galerie)");
+                    actionNew2.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            takePicture(1, R.id.ImageView_far);
+                            qa.dismiss();
                         }
                     });
 
@@ -161,15 +218,43 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         }
                     });
 
-                    QuickAction qa = new QuickAction(findViewById(R.id.AnchorZoom));
+                    qa.addActionItem(actionNew);
+                    qa.addActionItem(actionNew2);
+                    qa.addActionItem(actionModif);
+                    qa.setAnimStyle(QuickAction.ANIM_AUTO);
+
+                    qa.show();
+                } else {
+                    final ActionItem actionNew = new ActionItem();
+                    final ActionItem actionModif = new ActionItem();
+                    final QuickAction qa = new QuickAction(v);
+
+                    actionNew.setTitle("Prendre une photo");
+                    // chart.setIcon(getResources().getDrawable(R.drawable.chart));
+                    actionNew.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            takePicture(0, R.id.ImageView_far);
+                            qa.dismiss();
+                        }
+                    });
+
+                    actionModif.setTitle("Choisir un fichier");
+                    // production.setIcon(getResources().getDrawable(R.drawable.production));
+                    actionModif.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            takePicture(1, R.id.ImageView_far);
+                            qa.dismiss();
+
+                        }
+                    });
 
                     qa.addActionItem(actionNew);
                     qa.addActionItem(actionModif);
                     qa.setAnimStyle(QuickAction.ANIM_AUTO);
 
                     qa.show();
-                } else {
-                    takePicture(v);
                 }
 
                 break;
@@ -195,8 +280,37 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 finish();
                 break;
             case R.id.existing_incidents_add_picture:
-                takePicture(v);
-                finish();
+                final ActionItem actionNew = new ActionItem();
+                final ActionItem actionModif = new ActionItem();
+                final QuickAction qa = new QuickAction(v);
+
+                actionNew.setTitle("Prendre une photo");
+                // chart.setIcon(getResources().getDrawable(R.drawable.chart));
+                actionNew.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        takePicture(0, R.id.existing_incidents_add_picture);
+                        finish();
+                    }
+                });
+
+                actionModif.setTitle("Choisir un fichier");
+                // production.setIcon(getResources().getDrawable(R.drawable.production));
+                actionModif.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        takePicture(1, R.id.existing_incidents_add_picture);
+                        finish();
+
+                    }
+                });
+
+                qa.addActionItem(actionNew);
+                qa.addActionItem(actionModif);
+                qa.setAnimStyle(QuickAction.ANIM_AUTO);
+
+                qa.show();
+
                 break;
             case R.id.existing_incidents_invalid:
                 UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_INVALID);
@@ -209,8 +323,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 //$FALL-THROUGH$
             default:
                 break;
-                
-                
+
         }
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
@@ -234,24 +347,100 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     }
 
-    private void takePicture(View v) {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+    private void takePicture(int type, int RequestCode) {
+        // Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
         File tmpFile = null;
         try {
-            tmpFile = File.createTempFile("capture", "tmp");
+            tmpFile = File.createTempFile("capture", ".tmp");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        uriOfPicFromCamera = Uri.fromFile(tmpFile);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, uriOfPicFromCamera);
 
-        startActivityForResult(intent, v.getId());
+        Intent camIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        uriOfPicFromCamera = Uri.fromFile(tmpFile);
+        camIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriOfPicFromCamera);
+
+        Intent gallIntent = new Intent();
+        gallIntent.setType("image/*");
+        gallIntent.setAction(Intent.ACTION_GET_CONTENT);
+        // gallIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriOfPicFromCamera);
+
+        // List<Intent> yourIntentsList = new ArrayList<Intent>();
+        //
+        // List<ResolveInfo> listCam = getPackageManager().queryIntentActivities(camIntent, 0);
+        // for (ResolveInfo res : listCam) {
+        // final Intent finalIntent = new Intent(camIntent);
+        // finalIntent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
+        // yourIntentsList.add(finalIntent);
+        // }
+        //
+        // List<ResolveInfo> listGall = getPackageManager().queryIntentActivities(gallIntent, 0);
+        // for (ResolveInfo res : listGall) {
+        // final Intent finalIntent = new Intent(gallIntent);
+        // finalIntent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
+        // yourIntentsList.add(finalIntent);
+        // }
+
+        if (type == 0) {
+
+            ReportDetailsActivity.this.startActivityForResult(camIntent, RequestCode);
+        } else if (type == 1) {
+
+            ReportDetailsActivity.this.startActivityForResult(Intent.createChooser(gallIntent, "Galerie photo"), RequestCode);
+        }
+        // startActivityForResult(intent, v.getId());
 
     }
 
+    // @Override
+    // public boolean onCreateOptionsMenu(Menu menu) {
+    //
+    // File tmpFile = null;
+    // try {
+    // tmpFile = File.createTempFile("capture", "tmp");
+    // } catch (IOException e) {
+    // e.printStackTrace();
+    // }
+    //
+    // Intent camIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+    // uriOfPicFromCamera = Uri.fromFile(tmpFile);
+    // camIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriOfPicFromCamera);
+    // camIntent.addCategory(Intent.CATEGORY_ALTERNATIVE);
+    //
+    // Intent gallIntent = new Intent();
+    // gallIntent.setType("image/*");
+    // gallIntent.setAction(Intent.ACTION_GET_CONTENT);
+    // gallIntent.addCategory(Intent.CATEGORY_ALTERNATIVE);
+    //
+    // // Create an Intent that describes the requirements to fulfill, to be included
+    // // in our menu. The offering app must include a category value of Intent.CATEGORY_ALTERNATIVE.
+    //
+    // // Search and populate the menu with acceptable offering applications.
+    // menu.addIntentOptions(0, // Menu group to which new items will be added
+    // 0, // Unique item ID (none)
+    // 0, // Order for the items (none)
+    // this.getComponentName(), // The current Activity name
+    // null, // Specific items to place first (none)
+    // camIntent, // Intent created above that describes our requirements
+    // 0, // Additional flags to control items (none)
+    // null); // Array of MenuItems that correlate to specific items (none)
+    //
+    // // Search and populate the menu with acceptable offering applications.
+    // menu.addIntentOptions(0, // Menu group to which new items will be added
+    // 1, // Unique item ID (none)
+    // 1, // Order for the items (none)
+    // this.getComponentName(), // The current Activity name
+    // null, // Specific items to place first (none)
+    // gallIntent, // Intent created above that describes our requirements
+    // 0, // Additional flags to control items (none)
+    // null); // Array of MenuItems that correlate to specific items (none)
+    //
+    // return super.onCreateOptionsMenu(menu);
+    // }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
         Log.d(Constants.PROJECT_TAG, "Result : " + requestCode);
         switch (requestCode) {
             case R.id.existing_incidents_add_picture:
@@ -259,35 +448,63 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             case R.id.ImageView_close:
                 if (resultCode == RESULT_OK) {
                     try {
-                        InputStream in;
-                        BitmapFactory.Options opt = new BitmapFactory.Options();
 
-                        // get the sample size to have a smaller image
-                        in = getContentResolver().openInputStream(uriOfPicFromCamera);
-                        opt.inSampleSize = getSampleSize(getContentResolver().openInputStream(uriOfPicFromCamera));
-                        in.close();
+                        String finalPath;
 
-                        // decode a sampled version of the picture
-                        in = getContentResolver().openInputStream(uriOfPicFromCamera);
-                        Bitmap picture = BitmapFactory.decodeStream(in, null, opt);
-                        in.close();
+                        if (data != null) {
+                            Uri path = data.getData();
+                            // OI FILE Manager
+                            String filemanagerString = path.getPath();
+                            // MEDIA GALLERY
+                            String selectedImagePath = getPath(path);
 
-                        File f = new File(uriOfPicFromCamera.getPath());
-                        f.delete();
-
-                        // save the new image
-                        String pictureName = requestCode == R.id.ImageView_far ? CAPTURE_FAR : CAPTURE_CLOSE;
-                        FileOutputStream fos = openFileOutput(pictureName, MODE_PRIVATE);
-                        picture.compress(CompressFormat.JPEG, 80, fos);
-                        fos.close();
-
-                        if (requestCode != R.id.existing_incidents_add_picture) {
-                            setPictureToImageView(pictureName, (ImageView) findViewById(requestCode));
+                            if (selectedImagePath != null) {
+                                finalPath = selectedImagePath;
+                                System.out.println("selectedImagePath is the right one for you!");
+                            } else {
+                                finalPath = filemanagerString;
+                                System.out.println("filemanagerstring is the right one for you!");
+                            }
+                            // boolean isImage = true;
                         } else {
-                            showDialog(DIALOG_PROGRESS);
-                            File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
+                            finalPath = uriOfPicFromCamera.getPath();
+                        }
 
-                            AVService.getInstance(this).postImage(Utils.getUdid(this), img_comment, "" + currentIncident.id, null, img_close);
+                        if (data == null || getMimeType(finalPath).startsWith("image")) {
+                            InputStream in;
+                            BitmapFactory.Options opt = new BitmapFactory.Options();
+
+                            // get the sample size to have a smaller image
+                            in = getContentResolver().openInputStream(Uri.fromFile(new File(finalPath)));
+                            opt.inSampleSize = getSampleSize(getContentResolver().openInputStream(Uri.fromFile(new File(finalPath))));
+                            in.close();
+
+                            // decode a sampled version of the picture
+                            in = getContentResolver().openInputStream(Uri.fromFile(new File(finalPath)));
+                            Bitmap picture = BitmapFactory.decodeStream(in, null, opt);
+
+                            // Bitmap picture = BitmapFactory.decodeFile(finalPath);
+                            in.close();
+
+                            File f = new File(uriOfPicFromCamera.getPath());
+                            f.delete();
+
+                            // save the new image
+                            String pictureName = requestCode == R.id.ImageView_far ? CAPTURE_FAR : CAPTURE_CLOSE;
+                            FileOutputStream fos = openFileOutput(pictureName, MODE_PRIVATE);
+
+                            picture.compress(CompressFormat.JPEG, 80, fos);
+                            fos.close();
+
+                            if (requestCode != R.id.existing_incidents_add_picture) {
+                                setPictureToImageView(pictureName, (ImageView) findViewById(requestCode));
+                            } else {
+
+                                showDialog(DIALOG_PROGRESS);
+                                File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
+
+                                AVService.getInstance(this).postImage(Utils.getUdid(this), null, Long.toString(currentIncident.id), null, img_close);
+                            }
                         }
                         // FileOutputStream fos = openFileOutput("capture", MODE_WORLD_READABLE);
                         // InputStream in = getContentResolver().openInputStream(uriOfPicFromCamera);
@@ -327,6 +544,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 if (resultCode == RESULT_OK) {
                     currentIncident.description = data.getStringExtra(IntentData.EXTRA_COMMENT);
                     ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
+                    if (currentIncident.description != null) findViewById(R.id.LinearLayout_comment).setVisibility(View.VISIBLE);
                 }
                 break;
             case REQUEST_COMMENT_BEFORE_EXIT:
@@ -338,12 +556,36 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 break;
             case REQUEST_DETAILS:
                 if (resultCode == RESULT_OK) {
-                    img_comment = data.getStringExtra("comment");
+                    // startActivityForResult(data, requestCode)
+                    loadComment(REQUEST_COMMENT);
                 }
                 break;
             default:
+                super.onActivityResult(requestCode, resultCode, data);
                 break;
         }
+    }
+
+    public String getMimeType(String fileUrl) throws java.io.IOException {
+        FileNameMap fileNameMap = URLConnection.getFileNameMap();
+        String type = fileNameMap.getContentTypeFor(fileUrl);
+
+        if (type == null) return "unknown";
+
+        return type;
+    }
+
+    public String getPath(Uri uri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        if (cursor != null) {
+            // HERE YOU WILL GET A NULLPOINTER IF CURSOR IS NULL
+            // THIS CAN BE, IF YOU USED OI FILE MANAGER FOR PICKING THE MEDIA
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } else
+            return null;
     }
 
     private void setCategory(long l) {
@@ -449,7 +691,6 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 boolean isOk = (JsonData.VALUE_INCIDENT_SAVED == (answer.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS)));
 
                 if (isIncident && isOk) {
-
                     /*
                      * FileInputStream fis_close = openFileInput(CAPTURE_CLOSE);
                      * FileInputStream fis_far = openFileInput(CAPTURE_FAR);
@@ -475,7 +716,6 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
               * }
               */
 
-            dismissDialog(DIALOG_PROGRESS);
         }
 
     }

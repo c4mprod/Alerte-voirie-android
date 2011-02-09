@@ -29,6 +29,7 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.Incident;
@@ -44,7 +45,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
     private JSONObject                  response;
     private TreeMap<Long, JSONObject>   logs;
     private TreeMap<String, JSONObject> logList;
-    private Vector<Long> lock;
+    private Vector<Long>                lock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +88,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
                         removeDialog(DIALOG_PROGRESS);
                     }
                 });
-                
+
                 pd.setOnCancelListener(new OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
@@ -95,7 +96,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
                         finish();
                     }
                 });
-                
+
                 pd.setMessage(getString(R.string.ui_message_loading));
                 return pd;
 
@@ -169,7 +170,6 @@ public class NewsActivity extends ListActivity implements RequestListener {
 */
 //@formatter:on 
 
-       
         try {
             JSONArray responses;
             responses = new JSONArray((String) result);
@@ -221,18 +221,15 @@ public class NewsActivity extends ListActivity implements RequestListener {
                     setListAdapter(new MagicAdapter(this, items, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
                             JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, null));
                 }
-                
+
                 dismissDialog(DIALOG_PROGRESS);
             }
-            
-            
 
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
-        
     }
 
     class MagicAdapter extends JSONAdapter {
@@ -337,26 +334,29 @@ public class NewsActivity extends ListActivity implements RequestListener {
         try {
             Incident incident = Incident.fromJSONObject(new JSONObject(((MagicAdapter) getListAdapter()).getItem(position).toString()));
 
-            if(lock.contains(incident.id)) return;
-           /* JSONObject job = (JSONObject) logList.values().toArray()[((MagicAdapter) getListAdapter()).getRealPositionOfItem(position)];
-
-            if (job != null) {
-                if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(job.getString(JsonData.PARAM_STATUS))
-                    || JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(job.getString(JsonData.PARAM_STATUS))) return;
-            } else if (incident.state == 'R') return;*/
+            if (lock.contains(incident.id)) return;
+            /*
+             * JSONObject job = (JSONObject) logList.values().toArray()[((MagicAdapter) getListAdapter()).getRealPositionOfItem(position)];
+             * if (job != null) {
+             * if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(job.getString(JsonData.PARAM_STATUS))
+             * || JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(job.getString(JsonData.PARAM_STATUS))) return;
+             * } else if (incident.state == 'R') return;
+             */
 
         } catch (JSONException e) {
             Log.e(Constants.PROJECT_TAG, "JSONException in onListItemClick", e);
         }
         startActivityForResult(i, 1);
-        //startActivity(i);
+        // startActivity(i);
         // super.onListItemClick(l, v, position, id);
     }
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        finish();
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-        
+        if (resultCode == RESULT_OK) {
+            finish();
+            Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        }
     }
 }
