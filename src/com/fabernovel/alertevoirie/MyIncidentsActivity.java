@@ -173,6 +173,9 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
                                                                                    : INCIDENTS[i].equals("updated_incidents") ? getString(R.string.home_label_update)
                                                                                                                              : INCIDENTS[i].equals("resolved_incidents") ? getString(R.string.home_label_solved)
                                                                                                                                                                         : "");
+                            
+                            if (Integer.parseInt(answer.getString(INCIDENTS[i])) > 1 && INCIDENTS[i].equals("resolved_incidents")) title[i] += "s";
+                            
                             ((TextView) tabs.getChildAt(i)).setText(title[i]);
                             if (title[i].startsWith("0")) ((TextView) tabs.getChildAt(i)).setEnabled(false);
 

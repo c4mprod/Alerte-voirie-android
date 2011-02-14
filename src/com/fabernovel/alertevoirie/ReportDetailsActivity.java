@@ -46,6 +46,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -84,17 +85,29 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     private String              img_comment                 = "";
 
+    private boolean             canvalidate                 = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         requestWindowFeature(Window.FEATURE_LEFT_ICON);
         setContentView(R.layout.layout_report_details);
 
         // init title
         getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.icon_nouveau_rapport);
         getWindow().setTitle(getString(R.string.report_detail_new_report_title));
-        
+
         findViewById(R.id.LinearLayout_comment).setVisibility(View.GONE);
+        ((Button) findViewById(R.id.Button_validate)).setEnabled(false);
+
+        File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
+        File img_far = new File(getFilesDir() + "/" + CAPTURE_ARROW);
+        File img_far2 = new File(getFilesDir() + "/" + CAPTURE_FAR);
+
+        img_close.delete();
+        img_far.delete();
+        img_far2.delete();
 
         if (getIntent().getBooleanExtra("existing", false)) {
             findViewById(R.id.Button_validate).setVisibility(View.GONE);
@@ -112,7 +125,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 findViewById(R.id.existing_incidents_add_picture).setOnClickListener(this);
                 findViewById(R.id.existing_incidents_invalid).setOnClickListener(this);
 
-                if (currentIncident.description != null && currentIncident.description.length()>0) {
+                if (currentIncident.description != null && currentIncident.description.length() > 0) {
+                    findViewById(R.id.TextView_nocomment).setVisibility(View.GONE);
                     findViewById(R.id.LinearLayout_comment).setVisibility(View.VISIBLE);
                 }
 
@@ -147,6 +161,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     @Override
     public void onClick(View v) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog alert;
         Log.d(Constants.PROJECT_TAG, "onClick : " + v.getId());
         switch (v.getId()) {
             case R.id.ImageView_close:
@@ -271,13 +287,27 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
             case R.id.existing_incident_solved:
                 UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_RESOLVED);
-                Toast.makeText(this, getString(R.string.report_detail_new_report_ok), Toast.LENGTH_LONG).show();
-                finish();
+                builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        ReportDetailsActivity.this.finish();
+                        // Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
+                        ReportDetailsActivity.this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                    }
+                });
+                alert = builder.create();
+                alert.show();
                 break;
             case R.id.existing_incidents_confirmed:
                 UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_CONFIRMED);
-                Toast.makeText(this, getString(R.string.report_detail_new_report_ok), Toast.LENGTH_LONG).show();
-                finish();
+                builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        ReportDetailsActivity.this.finish();
+                        // Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
+                        ReportDetailsActivity.this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                    }
+                });
+                alert = builder.create();
+                alert.show();
                 break;
             case R.id.existing_incidents_add_picture:
                 final ActionItem actionNew = new ActionItem();
@@ -314,8 +344,15 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 break;
             case R.id.existing_incidents_invalid:
                 UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_INVALID);
-                Toast.makeText(this, getString(R.string.report_detail_new_report_ok), Toast.LENGTH_LONG).show();
-                finish();
+                builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        ReportDetailsActivity.this.finish();
+                        // Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
+                        ReportDetailsActivity.this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                    }
+                });
+                alert = builder.create();
+                alert.show();
                 break;
             case R.id.Button_validate:
 
@@ -341,6 +378,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     }
 
     protected void loadZoom() {
+        canvalidate = true;
+        findViewById(R.id.LinearLayout_comment).setVisibility(View.VISIBLE);
         Intent i = new Intent(ReportDetailsActivity.this, SelectZoomDetail.class);
         i.putExtra("comment", img_comment);
         startActivityForResult(i, REQUEST_DETAILS);
@@ -460,52 +499,56 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
                             if (selectedImagePath != null) {
                                 finalPath = selectedImagePath;
-                                System.out.println("selectedImagePath is the right one for you!");
+                                System.out.println("selectedImagePath is the right one for you! " + finalPath);
                             } else {
                                 finalPath = filemanagerString;
-                                System.out.println("filemanagerstring is the right one for you!");
+                                System.out.println("filemanagerstring is the right one for you!" + finalPath);
                             }
                             // boolean isImage = true;
                         } else {
                             finalPath = uriOfPicFromCamera.getPath();
                         }
 
-                        if (data == null || getMimeType(finalPath).startsWith("image")) {
-                            InputStream in;
-                            BitmapFactory.Options opt = new BitmapFactory.Options();
+                        // if (data == null || getMimeType(finalPath).startsWith("image")) {
+                        InputStream in;
+                        BitmapFactory.Options opt = new BitmapFactory.Options();
 
-                            // get the sample size to have a smaller image
-                            in = getContentResolver().openInputStream(Uri.fromFile(new File(finalPath)));
-                            opt.inSampleSize = getSampleSize(getContentResolver().openInputStream(Uri.fromFile(new File(finalPath))));
-                            in.close();
+                        // get the sample size to have a smaller image
+                        in = getContentResolver().openInputStream(Uri.fromFile(new File(finalPath)));
+                        opt.inSampleSize = getSampleSize(getContentResolver().openInputStream(Uri.fromFile(new File(finalPath))));
+                        in.close();
 
-                            // decode a sampled version of the picture
-                            in = getContentResolver().openInputStream(Uri.fromFile(new File(finalPath)));
-                            Bitmap picture = BitmapFactory.decodeStream(in, null, opt);
+                        // decode a sampled version of the picture
+                        in = getContentResolver().openInputStream(Uri.fromFile(new File(finalPath)));
+                        Bitmap picture = BitmapFactory.decodeStream(in, null, opt);
 
-                            // Bitmap picture = BitmapFactory.decodeFile(finalPath);
-                            in.close();
+                        // Bitmap picture = BitmapFactory.decodeFile(finalPath);
+                        in.close();
 
-                            File f = new File(uriOfPicFromCamera.getPath());
-                            f.delete();
+                        File f = new File(uriOfPicFromCamera.getPath());
+                        f.delete();
 
-                            // save the new image
-                            String pictureName = requestCode == R.id.ImageView_far ? CAPTURE_FAR : CAPTURE_CLOSE;
-                            FileOutputStream fos = openFileOutput(pictureName, MODE_PRIVATE);
+                        // save the new image
+                        String pictureName = requestCode == R.id.ImageView_far ? CAPTURE_FAR : CAPTURE_CLOSE;
+                        FileOutputStream fos = openFileOutput(pictureName, MODE_PRIVATE);
 
-                            picture.compress(CompressFormat.JPEG, 80, fos);
-                            fos.close();
+                        picture.compress(CompressFormat.JPEG, 80, fos);
+                        fos.close();
 
-                            if (requestCode != R.id.existing_incidents_add_picture) {
-                                setPictureToImageView(pictureName, (ImageView) findViewById(requestCode));
-                            } else {
-
-                                showDialog(DIALOG_PROGRESS);
-                                File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
-
-                                AVService.getInstance(this).postImage(Utils.getUdid(this), null, Long.toString(currentIncident.id), null, img_close);
+                        if (requestCode != R.id.existing_incidents_add_picture) {
+                            setPictureToImageView(pictureName, (ImageView) findViewById(requestCode));
+                            if (requestCode == R.id.ImageView_far && ((TextView) findViewById(R.id.TextView_address)).getText().length() > 0) {
+                                ((Button) findViewById(R.id.Button_validate)).setEnabled(true);
                             }
+                        } else {
+
+                            showDialog(DIALOG_PROGRESS);
+                            File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
+
+                            AVService.getInstance(this).postImage(Utils.getUdid(this), null, Long.toString(currentIncident.id), null, img_close);
                         }
+                        // }
+
                         // FileOutputStream fos = openFileOutput("capture", MODE_WORLD_READABLE);
                         // InputStream in = getContentResolver().openInputStream(uriOfPicFromCamera);
                         // Utils.fromInputToOutput(in, fos);
@@ -515,6 +558,12 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
+                    } catch (NullPointerException e) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        AlertDialog alert;
+                        builder.setMessage("Image invalide").setCancelable(false).setPositiveButton("Ok", null);
+                        alert = builder.create();
+                        alert.show();
                     }
 
                 } else if (resultCode == RESULT_CANCELED) {
@@ -538,13 +587,16 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     currentIncident.longitude = data.getDoubleExtra(IntentData.EXTRA_LONGITUDE, 0);
                     currentIncident.latitude = data.getDoubleExtra(IntentData.EXTRA_LATITUDE, 0);
                     ((TextView) findViewById(R.id.TextView_address)).setText(currentIncident.address);
+                    if (currentIncident.address != null && currentIncident.address.length() > 0 && canvalidate) {
+                        ((Button) findViewById(R.id.Button_validate)).setEnabled(true);
+                    }
                 }
                 break;
             case REQUEST_COMMENT:
                 if (resultCode == RESULT_OK) {
                     currentIncident.description = data.getStringExtra(IntentData.EXTRA_COMMENT);
                     ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
-                    if (currentIncident.description != null) findViewById(R.id.LinearLayout_comment).setVisibility(View.VISIBLE);
+                    if (currentIncident.description != null) findViewById(R.id.TextView_nocomment).setVisibility(View.GONE);
                 }
                 break;
             case REQUEST_COMMENT_BEFORE_EXIT:
@@ -638,6 +690,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             if (hasPic && (imageView.getId() == R.id.ImageView_far)) {
                 loadZoom();
             }
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -699,13 +752,31 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
                     File img_far = new File(getFilesDir() + "/" + CAPTURE_ARROW);
 
+                    if (!img_far.exists()) {
+                        img_far = new File(getFilesDir() + "/" + CAPTURE_FAR);
+                    }
+
                     AVService.getInstance(this).postImage(Utils.getUdid(this), img_comment,
                                                           answer.getJSONObject(JsonData.PARAM_ANSWER).getString(JsonData.ANSWER_INCIDENT_ID), img_far,
                                                           img_close);
-                    Toast.makeText(this, getString(R.string.report_detail_new_report_ok), Toast.LENGTH_LONG).show();
-                    finish();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    AlertDialog alert;
+                    builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false)
+                           .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                               public void onClick(DialogInterface dialog, int id) {
+                                   ReportDetailsActivity.this.finish();
+                                   // Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
+                                   ReportDetailsActivity.this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                               }
+                           });
+                    alert = builder.create();
+                    alert.show();
                 } else {
-                    Toast.makeText(this, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                    if ((answer.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS)) == 18) {
+                        Toast.makeText(this, "Incident déjà confirmé", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                    }
                 }
             } catch (JSONException e) {
                 Log.e(Constants.PROJECT_TAG, "Erreur d'envoi d'image", e);

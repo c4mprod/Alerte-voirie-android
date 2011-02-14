@@ -227,7 +227,7 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
 
     private void setMarker(final GeoPoint newGeo, Incident incident) {
 
-        SimpleItemizedOverlay cursor = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor));
+        SimpleItemizedOverlay cursor = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor), this, incident, map);
         cursor.addOverlayItem(new OverlayItem(newGeo, incident.date, incident.description));
         map.getOverlays().add(cursor);
         map.setSatellite(false);

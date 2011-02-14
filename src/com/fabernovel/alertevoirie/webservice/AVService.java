@@ -104,7 +104,7 @@ public class AVService {
                     JSONArray jo = new JSONArray(result);
                     int resultnum = jo.getJSONObject(0).getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS);
                     Log.i(Constants.PROJECT_TAG, "AV Status:" + resultnum);
-                    if (resultnum != 0) throw new AVServiceErrorException(resultnum);
+                    if (resultnum != 0 && resultnum != 18) throw new AVServiceErrorException(resultnum);
                     listener.onRequestcompleted(REQUEST_JSON, result);
 
                 } catch (JSONException e) {

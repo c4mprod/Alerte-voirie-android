@@ -1,8 +1,5 @@
 package com.fabernovel.alertevoirie.utils;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -11,7 +8,6 @@ import org.json.JSONObject;
 import com.fabernovel.alertevoirie.entities.Constants;
 
 import android.content.Context;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -68,7 +64,7 @@ public class JSONAdapter extends BaseAdapter {
     }
 
     public int getRealPositionOfItem(int position) {
-        
+
         return position - (categoryForPosition(position) + 1);
     }
 

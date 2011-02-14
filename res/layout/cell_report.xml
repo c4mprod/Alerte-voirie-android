@@ -9,20 +9,22 @@
 </AbsoluteLayout>
 		<RelativeLayout
 				android:id="@+id/RelativeLayout01"
-				android:layout_height="wrap_content"
-				android:layout_weight="1" android:layout_width="fill_parent">
+				android:layout_weight="1" android:layout_width="fill_parent" android:layout_height="wrap_content">
 				<TextView
 						android:id="@+id/TextView_title"
 						android:layout_height="wrap_content"
 						android:layout_width="fill_parent"
-						android:textAppearance="@style/TextBlueTitle" />
+						android:textAppearance="@style/TextBlueTitle" android:ellipsize="end" android:lines="2"/>
 				<TextView
 						android:id="@+id/TextView_text"
 						android:layout_below="@+id/TextView_title"
 						android:layout_height="wrap_content"
-						android:layout_width="fill_parent" />
-		</RelativeLayout>
+						android:layout_width="fill_parent"/>
+		
+<TextView android:textStyle="bold" android:layout_width="wrap_content" android:id="@+id/TextView_distance" android:layout_height="wrap_content" android:text="@string/address_distance" android:layout_alignParentBottom="true" android:layout_marginBottom="5dip" android:layout_below="@+id/TextView_text" android:gravity="bottom" android:visibility="gone"></TextView>
+</RelativeLayout>
 
 
 
+<ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/bouton_arrow" android:layout_gravity="center_vertical" android:id="@+id/Arrow_details" android:layout_marginLeft="10dip"></ImageView>
 </LinearLayout>

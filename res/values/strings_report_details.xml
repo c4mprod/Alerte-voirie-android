@@ -7,5 +7,5 @@
 <string name="report_details_btn_validate">"Valider ce rapport"</string>
 <string name="report_details_your_comment">Votre commentaire</string>
 <string name="report_detail_new_report_title">Nouveau rapport</string>
-<string name="report_detail_new_report_ok">Soumission du rapport effectuée</string>
+<string name="report_detail_new_report_ok">Votre rapport a été envoyé</string>
 </resources>

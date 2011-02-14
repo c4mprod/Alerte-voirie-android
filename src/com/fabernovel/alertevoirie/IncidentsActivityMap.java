@@ -157,6 +157,9 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
                                                                          : INCIDENTS[gettabIndex].equals("updated_incidents") ? getString(R.string.home_label_update)
                                                                                                                              : INCIDENTS[gettabIndex].equals("resolved_incidents") ? getString(R.string.home_label_solved)
                                                                                                                                                                                   : "");
+
+            if (datas.size() > 1 && INCIDENTS[gettabIndex].equals("resolved_incidents")) title = title + "s";
+
             ((TextView) tabs.getChildAt(gettabIndex)).setText(title);
             if (title.startsWith("0")) ((TextView) tabs.getChildAt(gettabIndex)).setEnabled(false);
 
@@ -205,7 +208,7 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
 
     private void setMarker(final GeoPoint newGeo, Incident incident) {
 
-        SimpleItemizedOverlay cursor = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor));
+        SimpleItemizedOverlay cursor = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor), this, incident, map);
         cursor.addOverlayItem(new OverlayItem(newGeo, incident.date, incident.description));
         map.getOverlays().add(cursor);
         map.setSatellite(false);
@@ -343,6 +346,7 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
                             case 2:
                                 datas = Resolved;
                                 title = getString(R.string.home_label_solved);
+                                if (datas.size() > 1) title += "s";
                                 break;
                             default:
                                 datas = new ArrayList<Incident>();
@@ -350,8 +354,8 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
                                 break;
                         }
 
-                        ((TextView) tabs.getChildAt(i)).setText(datas.size()+"\n"+title);
-                        
+                        ((TextView) tabs.getChildAt(i)).setText(datas.size() + "\n" + title);
+
                         if (!title.startsWith("0")) ((TextView) tabs.getChildAt(i)).setEnabled(true);
 
                     }
@@ -366,10 +370,7 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
             Toast.makeText(this, "Erreur serveur", Toast.LENGTH_LONG).show();
 
         }
-        
-        
 
         // dismissDialog(DIALOG_PROGRESS);
     }
-
 }

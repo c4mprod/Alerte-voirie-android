@@ -4,6 +4,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.c4mprod.utils.Flip3dAnimation;
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.entities.Last_Location;
@@ -27,6 +28,9 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AnimationSet;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 public class HomeActivity extends Activity implements OnClickListener, LocationListener, RequestListener {
@@ -34,6 +38,7 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
     private LocationManager  locationManager;
     private Location         lastlocation;
     private boolean          dialog_shown    = false;
+    private boolean          hidedialog      = false;
     private Handler          myHandler       = new Handler();
     private Runnable         removeUpdate    = new Runnable() {
                                                  @Override
@@ -68,6 +73,12 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
     }
 
     @Override
+    protected void onPause() {
+        this.hidedialog = false;
+        super.onPause();
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.Button_news:
@@ -88,7 +99,7 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
             default:
                 break;
         }
-        //overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        // overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     @Override
@@ -175,6 +186,18 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
 
             JSONObject response = responses.getJSONObject(0);
 
+            final AnimationSet set = new AnimationSet(false);
+
+            final float centerX = findViewById(R.id.LinearLayout02).getWidth() / 2;
+            final float centerY = findViewById(R.id.LinearLayout02).getHeight() / 2;
+            final Flip3dAnimation animation = new Flip3dAnimation(0, 360, centerX, centerY);
+            animation.setDuration(500);
+            set.setFillAfter(true);
+            set.setFillBefore(true);
+            animation.setInterpolator(new AccelerateInterpolator());
+
+            set.addAnimation(animation);
+
             if (requestCode == AVService.REQUEST_JSON) {
                 if (JsonData.VALUE_REQUEST_GET_INCIDENTS_STATS.equals(response.getString(JsonData.PARAM_REQUEST))) {
                     Last_Location.Incidents = response.getJSONObject(JsonData.PARAM_ANSWER);
@@ -195,18 +218,23 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
 
                 }
             }
+
+            findViewById(R.id.LinearLayout02).startAnimation(set);
+            findViewById(R.id.LinearLayout04).startAnimation(set);
+            findViewById(R.id.LinearLayout03).startAnimation(set);
         } catch (JSONException e) {
             Log.e(Constants.PROJECT_TAG, "JSONException", e);
         } catch (ClassCastException e) {
             Log.e(Constants.PROJECT_TAG, "Invalid result. Trying to cast " + result.getClass() + "into String", e);
         } finally {
-            dismissDialog(DIALOG_PROGRESS);
+            if (hidedialog) dismissDialog(DIALOG_PROGRESS);
             dialog_shown = false;
         }
     }
 
     @Override
     protected void onResume() {
+        hidedialog = true;
         handleNewLocation(lastlocation);
         super.onResume();
     }

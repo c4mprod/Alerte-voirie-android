@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -29,6 +30,7 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fabernovel.alertevoirie.entities.Constants;
@@ -216,18 +218,28 @@ public class NewsActivity extends ListActivity implements RequestListener {
                         JSONObject job = new JSONObject(events.get(log.getLong(JsonData.ANSWER_INCIDENT_ID)).toString());
                         job.put(JsonData.PARAM_INCIDENT_DATE, log.getString(JsonData.PARAM_INCIDENT_DATE));
                         items.put(job);
+
+                        if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(log.getString(JsonData.PARAM_STATUS))
+                            || JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(log.getString(JsonData.PARAM_STATUS))) {
+                            lock.add(log.getLong(JsonData.ANSWER_INCIDENT_ID));
+                        }
                     }
 
                     setListAdapter(new MagicAdapter(this, items, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
                             JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, null));
                 }
 
-                dismissDialog(DIALOG_PROGRESS);
             }
 
         } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Log.e(Constants.PROJECT_TAG, "error in onRequestcompleted : ", e);
+        } catch (ClassCastException e) {
+            Log.e(Constants.PROJECT_TAG, "error in onRequestcompleted : CLasscastException", e);
+        } catch (NullPointerException e) {
+            Log.e(Constants.PROJECT_TAG, "error in onRequestcompleted : NullPointerException", e);
+        } finally {
+
+            if (requestCode == AVService.REQUEST_JSON) dismissDialog(DIALOG_PROGRESS);
         }
 
     }
@@ -302,18 +314,27 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
                 if (JsonData.PARAM_UPDATE_INCIDENT_CONFIRMED.equals(status)) {
                     iw.setImageResource(R.drawable.icn_incident_confirme);
+                    ((TextView) v.findViewById(R.id.TextView_title)).setText(getString(R.string.news_incidents_confirmed) + incident.description);
                 } else if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(status)) {
                     iw.setImageResource(R.drawable.icn_incident_nonvalide);
-                    lock.add(incident.id);
+                    ((TextView) v.findViewById(R.id.TextView_title)).setText(getString(R.string.news_incidents_invalidated) + incident.description);
                 } else if (JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(status)) {
                     iw.setImageResource(R.drawable.icn_incident_resolu2);
-                    lock.add(incident.id);
+                    ((TextView) v.findViewById(R.id.TextView_title)).setText(getString(R.string.news_incidents_resolved) + incident.description);
                 } else if (JsonData.PARAM_UPDATE_INCIDENT_NEW.equals(status)) {
                     iw.setImageResource(R.drawable.icn_creer);
+                    ((TextView) v.findViewById(R.id.TextView_title)).setText(getString(R.string.news_incidents_created) + incident.description);
                 } else if (JsonData.PARAM_UPDATE_INCIDENT_PHOTO.equals(status)) {
                     iw.setImageResource(R.drawable.icn_photo_ajoutee);
+                    ((TextView) v.findViewById(R.id.TextView_title)).setText(getString(R.string.news_incidents_picture_added) + incident.description);
                 } else {
                     iw.setVisibility(View.INVISIBLE);
+                }
+
+                if (lock.contains(incident.id)) {
+                    v.findViewById(R.id.Arrow_details).setVisibility(View.GONE);
+                } else {
+                    v.findViewById(R.id.Arrow_details).setVisibility(View.VISIBLE);
                 }
 
                 ((ImageView) v.findViewById(R.id.ImageView_icon)).setVisibility(View.GONE);
@@ -354,9 +375,17 @@ public class NewsActivity extends ListActivity implements RequestListener {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            finish();
-            Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    NewsActivity.this.finish();
+                    // Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
+                    NewsActivity.this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                }
+            });
+            AlertDialog alert = builder.create();
+            alert.show();
+
         }
     }
 }

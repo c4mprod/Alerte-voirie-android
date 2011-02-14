@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.c4mprod.utils.ImageDownloader;
 import com.fabernovel.alertevoirie.entities.Constants;
@@ -112,7 +113,14 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
             if (requestCode == AVService.REQUEST_JSON) {
                 if (JsonData.VALUE_REQUEST_GET_INCIDENTS_BY_POSITION.equals(response.getString(JsonData.PARAM_REQUEST))) {
                     JSONArray items = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_CLOSEST_INCIDENTS);
-                    setListAdapter(new MagicAdapter(this, items, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
+
+                    JSONArray items2 = new JSONArray();
+
+                    for (int i = 0; i < items.length(); i++) {
+                        Incident inc = Incident.fromJSONObject(items.getJSONObject(i));
+                        if (inc.state != 'R') items2.put(items.getJSONObject(i));
+                    }
+                    setListAdapter(new MagicAdapter(this, items2, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
                             JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }));
                 }
             }
@@ -189,6 +197,20 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                                                                                                             : incident.confirms > 0 ? getResources().getDrawable(R.drawable.icn_incident_confirme)
                                                                                                                                    : state == 'R' ? getResources().getDrawable(R.drawable.icn_incident_resolu2)
                                                                                                                                                  : getResources().getDrawable(R.drawable.icn_creer));
+                
+                if(incident.invalidations > 0){
+                    v.findViewById(R.id.Arrow_details).setVisibility(View.GONE);
+                }else{
+                    v.findViewById(R.id.Arrow_details).setVisibility(View.VISIBLE);
+                }
+
+                float[] distances = new float[3];
+
+                Location.distanceBetween(Last_Location.latitude, Last_Location.longitude, incident.latitude, incident.longitude, distances);
+
+                ((TextView) v.findViewById(R.id.TextView_distance)).setText(getString(R.string.address_distance).replace("x",
+                                                                                                                         Integer.toString((int) distances[0])));
+                ((TextView) v.findViewById(R.id.TextView_distance)).setVisibility(View.VISIBLE);
                 // ImageManager.fetchDrawableOnThread(imgName, icone, icone.getDrawable());
 
             } catch (JSONException e) {

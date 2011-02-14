@@ -8,18 +8,21 @@
 				android:text="@string/select_position_header1"
 				android:layout_height="wrap_content"
 				android:layout_width="fill_parent"
-				style="@style/CategoryHeader" />
+				style="@style/CategoryHeader"
+				android:id="@+id/TextViewpos01" />
 		<TextView
 				android:text="@string/select_position_where"
 				android:layout_height="wrap_content"
 				android:layout_width="fill_parent"
 				android:textAppearance="@style/TextBlueTitle"
-				android:paddingLeft="@dimen/ui_margin_side" />
+				android:paddingLeft="@dimen/ui_margin_side"
+				android:id="@+id/TextViewpos02" />
 		<RelativeLayout
 				android:layout_height="wrap_content"
 				android:layout_width="fill_parent"
 				android:paddingLeft="@dimen/ui_margin_side"
-				android:paddingRight="@dimen/ui_margin_side">
+				android:paddingRight="@dimen/ui_margin_side"
+				android:id="@+id/Layoutpos01">
 				<EditText
 						android:id="@+id/EditText_address_number"
 						android:layout_height="wrap_content"
@@ -33,7 +36,8 @@
 						android:nextFocusDown="@+id/EditText_address_postcode"
 						android:nextFocusLeft="@+id/EditText_address_town"
 						android:nextFocusUp="@+id/EditText_address_town"
-						android:imeOptions="actionNext" android:singleLine="true"/>
+						android:imeOptions="actionNext"
+						android:singleLine="true" />
 				<EditText
 						android:layout_height="wrap_content"
 						android:id="@+id/EditText_address_street"
@@ -47,8 +51,9 @@
 						android:nextFocusDown="@+id/EditText_address_town"
 						android:nextFocusRight="@+id/EditText_address_postcode"
 						android:nextFocusLeft="@+id/EditText_address_number"
-						android:imeOptions="actionNext" android:singleLine="true">
-						</EditText>
+						android:imeOptions="actionNext"
+						android:singleLine="true">
+				</EditText>
 				<EditText
 						android:layout_height="wrap_content"
 						android:layout_below="@+id/EditText_address_number"
@@ -63,7 +68,8 @@
 						android:nextFocusRight="@+id/EditText_address_town"
 						android:nextFocusUp="@+id/EditText_address_number"
 						android:nextFocusDown="@+id/EditText_address_number"
-						android:imeOptions="actionNext" android:singleLine="true"></EditText>
+						android:imeOptions="actionNext"
+						android:singleLine="true"></EditText>
 				<EditText
 						android:layout_toRightOf="@+id/EditText_address_postcode"
 						android:layout_height="wrap_content"
@@ -78,7 +84,8 @@
 						android:nextFocusLeft="@+id/EditText_address_postcode"
 						android:nextFocusRight="@+id/EditText_address_number"
 						android:nextFocusUp="@+id/EditText_address_town"
-						android:imeOptions="actionNext" android:singleLine="true"></EditText>
+						android:imeOptions="actionNext"
+						android:singleLine="true"></EditText>
 
 
 
@@ -91,17 +98,35 @@
 				android:layout_height="wrap_content"
 				android:layout_width="fill_parent"
 				android:layout_marginBottom="3dip" />
+		<LinearLayout
+				android:id="@+id/LinearLayout01"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"></LinearLayout>
 		<TextView
 				android:text="@string/select_position_header2"
 				android:layout_height="wrap_content"
 				android:layout_width="fill_parent"
-				style="@style/CategoryHeader" />
+				style="@style/CategoryHeader"
+				android:id="@+id/TextViewpos03" />
 
-		<com.google.android.maps.MapView
-				android:id="@+id/MapView_map"
-				android:clickable="true"
-				android:layout_width="fill_parent"
+		<FrameLayout
+				android:id="@+id/FrameLayout01"
 				android:layout_height="fill_parent"
-				android:apiKey="@string/map_api_key" />
+				android:layout_width="fill_parent">
+				<com.google.android.maps.MapView
+						android:id="@+id/MapView_map"
+						android:clickable="true"
+						android:layout_width="fill_parent"
+						android:layout_height="fill_parent"
+						android:apiKey="@string/map_api_key" />
+				<Button
+						android:id="@+id/ButtonMapPosition"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_gravity="top|right" android:background="@drawable/btn_bg_agrandir"></Button>
+		</FrameLayout>
+
+
+
 
 </LinearLayout>

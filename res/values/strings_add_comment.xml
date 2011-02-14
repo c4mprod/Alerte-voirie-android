@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<string name="add_comment_title">Nouveau rapport</string>
-<string name="add_comment_header">Votre commentaire</string>
-<string name="add_comment_button_validate">Valider</string>
+		<string
+				name="add_comment_title">Nouveau rapport</string>
+		<string
+				name="add_comment_header">Votre commentaire</string>
+		<string
+				name="add_comment_button_validate">Valider</string>
+		<string
+				name="add_comment_nocomment">Veuillez entrer un commentaire</string>
 </resources>

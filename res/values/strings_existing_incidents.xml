@@ -2,8 +2,8 @@
 <resources>
 		<string
 				name="existing_incidents_title">"Nouveau rapport"</string>
-				
-				<string
+
+		<string
 				name="incidents_title">"Carte des incidents"</string>
 		<string
 				name="existing_incidents_button_validate">"Non, déclarer mon incident"</string>
@@ -19,4 +19,14 @@
 				name="existing_incidents_add_picture">"Ajouter une photo"</string>
 		<string
 				name="existing_incidents_status">"Personne n'a confirmé cet incident"</string>
+		<string
+				name="news_incidents_created">"Incident créé "</string>
+		<string
+				name="news_incidents_resolved">"Incident résolu "</string>
+		<string
+				name="news_incidents_confirmed">"Incident confirmé "</string>
+		<string
+				name="news_incidents_invalidated">"Incident invalidé "</string>
+		<string
+				name="news_incidents_picture_added">"Photo ajoutée dans "</string>
 </resources>

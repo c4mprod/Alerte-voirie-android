@@ -23,6 +23,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.fabernovel.alertevoirie.entities.Constants;
+import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.utils.LocationHelper;
 import com.fabernovel.alertevoirie.utils.SimpleItemizedOverlay;
@@ -70,10 +71,31 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
 
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                enableSearch();
+                if (!hasFocus) enableSearch();
 
             }
         };
+
+        ((Button) findViewById(R.id.ButtonMapPosition)).setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (!("-").equals(((Button) v).getTag())) {
+                    ((Button) v).setTag("-");
+                    ((Button) v).setBackgroundDrawable(getResources().getDrawable(R.drawable.btn_bg_diminuer));
+                    SelectPositionActivity.this.findViewById(R.id.TextViewpos02).setVisibility(View.GONE);
+                    SelectPositionActivity.this.findViewById(R.id.Layoutpos01).setVisibility(View.GONE);
+                    SelectPositionActivity.this.findViewById(R.id.TextViewpos03).setVisibility(View.GONE);
+                } else {
+                    ((Button) v).setTag("+");
+                    ((Button) v).setBackgroundDrawable(getResources().getDrawable(R.drawable.btn_bg_agrandir));
+                    SelectPositionActivity.this.findViewById(R.id.TextViewpos02).setVisibility(View.VISIBLE);
+                    SelectPositionActivity.this.findViewById(R.id.TextViewpos03).setVisibility(View.VISIBLE);
+                    SelectPositionActivity.this.findViewById(R.id.Layoutpos01).setVisibility(View.VISIBLE);
+                }
+
+            }
+        });
 
         ((TextView) findViewById(R.id.EditText_address_number)).setOnFocusChangeListener(ofc);
         ((TextView) findViewById(R.id.EditText_address_street)).setOnFocusChangeListener(ofc);
@@ -105,9 +127,11 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     }
 
     protected void enableSearch() {
-        ((Button) findViewById(R.id.Button_validate)).setText(R.string.address_search);
-        findViewById(R.id.Button_validate).setEnabled(true);
-        search = true;
+        if (findViewById(R.id.Layoutpos01).getVisibility() == View.VISIBLE) {
+            ((Button) findViewById(R.id.Button_validate)).setText(R.string.address_search);
+            findViewById(R.id.Button_validate).setEnabled(true);
+            search = true;
+        }
     }
 
     public void onLocationChanged(Location location) {
@@ -142,7 +166,7 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     private void setMarker(GeoPoint newGeo) {
 
         map.getOverlays().clear();
-        CursorOveray cursor = new CursorOveray(getResources().getDrawable(R.drawable.map_cursor));
+        CursorOveray cursor = new CursorOveray(getResources().getDrawable(R.drawable.map_cursor), this, null, map);
         cursor.addOverlayItem(new OverlayItem(newGeo, null, null));
         map.getOverlays().add(cursor);
         map.invalidate();
@@ -161,8 +185,8 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
 
     private class CursorOveray extends SimpleItemizedOverlay {
 
-        public CursorOveray(Drawable defaultMarker) {
-            super(defaultMarker);
+        public CursorOveray(Drawable defaultMarker, Context c, Incident i, MapView map) {
+            super(defaultMarker, c, i, map);
         }
 
         @Override
@@ -240,8 +264,6 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
                 postcode = result[2];
                 town = result[3];
 
-               
-
             } else {
                 for (String string : result) {
                     street += (string != null ? " " + string : "");
@@ -264,7 +286,7 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
 
             ((Button) findViewById(R.id.Button_validate)).setText(R.string.select_position_btn_validate);
             search = false;
-            
+
             Log.d(Constants.PROJECT_TAG, "Number : " + number);
             Log.d(Constants.PROJECT_TAG, "Street : " + street);
             Log.d(Constants.PROJECT_TAG, "Postcode : " + postcode);
