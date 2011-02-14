@@ -18,7 +18,6 @@ import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Window;
 import android.widget.CompoundButton;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;

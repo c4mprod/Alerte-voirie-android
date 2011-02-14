@@ -117,7 +117,7 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                     JSONArray items2 = new JSONArray();
 
                     for (int i = 0; i < items.length(); i++) {
-                        Incident inc = Incident.fromJSONObject(items.getJSONObject(i));
+                        Incident inc = Incident.fromJSONObject(this, items.getJSONObject(i));
                         if (inc.state != 'R') items2.put(items.getJSONObject(i));
                     }
                     setListAdapter(new MagicAdapter(this, items2, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
@@ -167,7 +167,7 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
             String imgName = null;
             try {
 
-                Incident incident = Incident.fromJSONObject(((JSONObject) getItem(position)));
+                Incident incident = Incident.fromJSONObject(getApplicationContext(), ((JSONObject) getItem(position)));
 
                 Log.i(Constants.PROJECT_TAG, "getView : incident" + incident);
 
@@ -197,10 +197,10 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                                                                                                             : incident.confirms > 0 ? getResources().getDrawable(R.drawable.icn_incident_confirme)
                                                                                                                                    : state == 'R' ? getResources().getDrawable(R.drawable.icn_incident_resolu2)
                                                                                                                                                  : getResources().getDrawable(R.drawable.icn_creer));
-                
-                if(incident.invalidations > 0){
+
+                if (incident.invalidations > 0) {
                     v.findViewById(R.id.Arrow_details).setVisibility(View.GONE);
-                }else{
+                } else {
                     v.findViewById(R.id.Arrow_details).setVisibility(View.VISIBLE);
                 }
 
@@ -258,7 +258,7 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
         i.putExtra("event", l.getAdapter().getItem(position).toString());
 
         try {
-            Incident incident = Incident.fromJSONObject(new JSONObject(l.getAdapter().getItem(position).toString()));
+            Incident incident = Incident.fromJSONObject(this, new JSONObject(l.getAdapter().getItem(position).toString()));
             if (incident.state == 'R' || incident.invalidations > 0) return;
         } catch (JSONException e) {
             Log.e(Constants.PROJECT_TAG, "JSONException in onListItemClick", e);

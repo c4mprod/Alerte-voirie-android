@@ -6,15 +6,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.PendingIntent.OnFinished;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.RadioGroup.OnCheckedChangeListener;
 
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.Incident;
@@ -41,9 +40,9 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
     ArrayList<Incident>          Ongoing         = new ArrayList<Incident>();
     ArrayList<Incident>          Updated         = new ArrayList<Incident>();
     ArrayList<Incident>          Resolved        = new ArrayList<Incident>();
-    int                          lat_min         = 999999999;
+    int                          lat_min         = Integer.MAX_VALUE;
     int                          lat_max         = 0;
-    int                          lon_min         = 999999999;
+    int                          lon_min         = Integer.MAX_VALUE;
     int                          lon_max         = 0;
 
     /** Called when the activity is first created. */
@@ -56,6 +55,9 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
 
         map = (MapView) findViewById(R.id.MapView_mymap);
         tabs = (RadioGroup) findViewById(R.id.RadioGroup_tabs_map);
+
+        map.setSatellite(false);
+        map.invalidate();
 
         findViewById(R.id.ToggleButton_Map).setVisibility(View.GONE);
 
@@ -128,6 +130,9 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
     }
 
     protected void setMapForTab(int gettabIndex) {
+
+        ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
+
         ArrayList<Incident> datas = new ArrayList<Incident>();
         switch (gettabIndex) {
             case 0:
@@ -149,8 +154,7 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
 
         for (Incident myIncident : datas) {
 
-            GeoPoint geo = new GeoPoint((int) (myIncident.latitude * 1E6), (int) (myIncident.longitude * 1E6));
-            setMarker(geo, myIncident);
+            items.add(myIncident);
             title = datas.size()
                     + "\n"
                     + (INCIDENTS[gettabIndex].equals("ongoing_incidents") ? getString(R.string.home_label_current)
@@ -165,9 +169,9 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
 
         }
 
-        lat_min = 999999999;
+        lat_min = Integer.MAX_VALUE;
         lat_max = 0;
-        lon_min = 999999999;
+        lon_min = Integer.MAX_VALUE;
         lon_max = 0;
 
         if (datas != null) {
@@ -181,8 +185,7 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
                 if (lon_min > (myIncident.longitude * 1E6)) lon_min = (int) (myIncident.longitude * 1E6);
                 if (lon_max < (myIncident.longitude * 1E6)) lon_max = (int) (myIncident.longitude * 1E6);
 
-                GeoPoint geo = new GeoPoint((int) (myIncident.latitude * 1E6), (int) (myIncident.longitude * 1E6));
-                setMarker(geo, myIncident);
+                items.add(myIncident);
 
             }
 
@@ -204,17 +207,9 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
             }
         }
 
-    }
-
-    private void setMarker(final GeoPoint newGeo, Incident incident) {
-
-        SimpleItemizedOverlay cursor = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor), this, incident, map);
-        cursor.addOverlayItem(new OverlayItem(newGeo, incident.date, incident.description));
-        map.getOverlays().add(cursor);
-        map.setSatellite(false);
+        SimpleItemizedOverlay overlay = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor), this, map, items);
+        map.getOverlays().add(overlay);
         map.invalidate();
-        map.getController().animateTo(newGeo);
-
     }
 
     private int gettabIndex(int id) {
@@ -312,15 +307,16 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
                     JSONArray items = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_CLOSEST_INCIDENTS);
 
                     for (int i = 0; i < items.length(); i++) {
+                        Incident incident = Incident.fromJSONObject(this, items.getJSONObject(i));
                         switch (items.getJSONObject(i).getString(JsonData.PARAM_INCIDENT_STATUS).charAt(0)) {
                             case 'O':
-                                Ongoing.add(Incident.fromJSONObject(items.getJSONObject(i)));
+                                Ongoing.add(incident);
                                 break;
                             case 'U':
-                                Updated.add(Incident.fromJSONObject(items.getJSONObject(i)));
+                                Updated.add(incident);
                                 break;
                             case 'R':
-                                Resolved.add(Incident.fromJSONObject(items.getJSONObject(i)));
+                                Resolved.add(incident);
                                 break;
 
                             default:

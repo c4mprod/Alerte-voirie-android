@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -17,39 +18,39 @@ import com.fabernovel.alertevoirie.entities.Incident;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
-import com.google.android.maps.OverlayItem;
 import com.google.android.maps.MapView.LayoutParams;
+import com.google.android.maps.OverlayItem;
 
 @SuppressWarnings("rawtypes")
 public class SimpleItemizedOverlay extends ItemizedOverlay {
     private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
     private View                   mBubbleView;
     private Context                c;
-    private String                 name, address, incident;
     private MapView                mMapView;
-    private boolean                clickable;
+    private Drawable defaultMarker;
 
-    public SimpleItemizedOverlay(Drawable defaultMarker, Context context, Incident incident, MapView mapview) {
-        super(boundCenterBottom(defaultMarker));
+    public SimpleItemizedOverlay(Drawable defaultMarker, Context context, MapView mapview,ArrayList<OverlayItem> overlayItems ) {
+        super(defaultMarker);
+        defaultMarker = boundCenterBottom(defaultMarker);
         c = context;
-        if (incident != null) {
-            this.name = incident.description;
-            this.address = incident.address;
-            this.incident = incident.toString();
-            this.clickable = (incident.invalidations > 0 || incident.state == 'R');
-        }
         this.mMapView = mapview;
-
-    }
-
-    public void addOverlayItem(OverlayItem overlay) {
-        mOverlays.add(overlay);
+        
+        mOverlays = overlayItems;
         populate();
     }
 
+//    public void addOverlayItem(OverlayItem overlay) {
+//        mOverlays.add(overlay);
+//        populate();
+//    }
+
     @Override
     protected OverlayItem createItem(int i) {
-        return mOverlays.get(i);
+        Log.d("AlerteVoirie_PM", "create item");
+        OverlayItem overlayItem = mOverlays.get(i);
+        boundCenterBottom(overlayItem.getMarker(0));
+//        overlayItem.setMarker(defaultMarker);
+        return overlayItem;
     }
 
     @Override
@@ -64,14 +65,16 @@ public class SimpleItemizedOverlay extends ItemizedOverlay {
 
     @Override
     protected boolean onTap(int index) {
-        if (incident != null) {
+        Incident tappedIncident = (Incident) getItem(index);
+        if (tappedIncident != null) {
             OverlayItem tapped = getItem(index);
             MapView.LayoutParams params = new MapView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, tapped.getPoint(),
                                                                    LayoutParams.BOTTOM_CENTER);
             params.mode = MapView.LayoutParams.MODE_MAP;
             if (mBubbleView == null) {
                 mBubbleView = ((LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.view_map_bubble, null);
-                if (clickable) {
+                
+                if (tappedIncident.invalidations > 0 || tappedIncident.state == 'R') {
                     mBubbleView.findViewById(R.id.Bubble_arrow).setVisibility(View.VISIBLE);
                     mBubbleView.setOnClickListener(new OnClickListener() {
                         @Override
@@ -90,9 +93,10 @@ public class SimpleItemizedOverlay extends ItemizedOverlay {
             }
             TextView title = (TextView) mBubbleView.findViewById(R.id.TextView_title);
             TextView subtitle = (TextView) mBubbleView.findViewById(R.id.TextView_subtitle);
-            title.setText(name);
-            subtitle.setText(address);
-            mBubbleView.setTag(incident);
+            
+            title.setText(tappedIncident.description);
+            subtitle.setText(tappedIncident.address);
+            mBubbleView.setTag(tappedIncident.toString());
             mMapView.addView(mBubbleView, params);
             mMapView.getController().animateTo(tapped.getPoint());
             return true;
