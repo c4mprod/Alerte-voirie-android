@@ -5,8 +5,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.fabernovel.alertevoirie.entities.Constants;
-
 import android.content.Context;
 import android.util.Log;
 import android.util.SparseArray;
@@ -16,6 +14,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.fabernovel.alertevoirie.entities.Constants;
 
 public class JSONAdapter extends BaseAdapter {
     protected static final int  TYPE_CATEGORY = 0;

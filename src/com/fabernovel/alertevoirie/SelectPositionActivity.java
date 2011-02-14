@@ -28,6 +28,7 @@ import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.utils.LocationHelper;
 import com.fabernovel.alertevoirie.utils.SimpleItemizedOverlay;
 import com.google.android.maps.GeoPoint;
+import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
@@ -39,6 +40,8 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     private GeoPoint        currentPoint;
     private Geocoder        geo;
     private boolean         search              = false;
+    
+    private CursorOveray cursorOverlay;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -108,6 +111,10 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
         map.setBuiltInZoomControls(true);
         map.getController().setZoom(18);
         map.setSatellite(true);
+        
+        cursorOverlay = new CursorOveray(getResources().getDrawable(R.drawable.map_cursor));
+        map.getOverlays().add(cursorOverlay);
+        map.invalidate();
 
         findViewById(R.id.Button_validate).setEnabled(false);
 
@@ -165,11 +172,7 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
 
     private void setMarker(GeoPoint newGeo) {
 
-        map.getOverlays().clear();
-        CursorOveray cursor = new CursorOveray(getResources().getDrawable(R.drawable.map_cursor), this, null, map);
-        cursor.addOverlayItem(new OverlayItem(newGeo, null, null));
-        map.getOverlays().add(cursor);
-        map.invalidate();
+        cursorOverlay.setGeopoint(newGeo);
         currentPoint = newGeo;
 
         // ((TextView) findViewById(R.id.TextView_address)).setText(null);
@@ -183,10 +186,29 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
         return false;
     }
 
-    private class CursorOveray extends SimpleItemizedOverlay {
+    private class CursorOveray extends ItemizedOverlay<OverlayItem> {
+        GeoPoint p;
+        
 
-        public CursorOveray(Drawable defaultMarker, Context c, Incident i, MapView map) {
-            super(defaultMarker, c, i, map);
+        public CursorOveray(Drawable defaultMarker) {
+            super(boundCenterBottom(defaultMarker));
+            // TODO Auto-generated constructor stub
+        }
+        
+        public void setGeopoint(GeoPoint geo) {
+            p = geo;
+            populate();
+        }
+        
+        @Override
+        protected OverlayItem createItem(int i) {
+            OverlayItem item = new OverlayItem(p,"","");
+            return item;
+        }
+        
+        @Override
+        public int size() {
+            return 1;
         }
 
         @Override

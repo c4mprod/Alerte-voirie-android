@@ -1,13 +1,9 @@
 package net.londatiga.android;
 
-import com.fabernovel.alertevoirie.R;
-
 import android.content.Context;
-
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -15,8 +11,9 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
-
 import android.widget.PopupWindow;
+
+import com.fabernovel.alertevoirie.R;
 
 /**
  * This class does most of the work of wrapping the {@link PopupWindow} so it's simpler to use. 

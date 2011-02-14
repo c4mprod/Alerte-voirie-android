@@ -4,22 +4,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.c4mprod.utils.Flip3dAnimation;
-import com.fabernovel.alertevoirie.entities.Constants;
-import com.fabernovel.alertevoirie.entities.JsonData;
-import com.fabernovel.alertevoirie.entities.Last_Location;
-import com.fabernovel.alertevoirie.utils.LocationHelper;
-import com.fabernovel.alertevoirie.utils.Utils;
-import com.fabernovel.alertevoirie.webservice.AVService;
-import com.fabernovel.alertevoirie.webservice.RequestListener;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
+import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -30,8 +21,16 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AnimationSet;
-import android.view.animation.AnimationUtils;
 import android.widget.TextView;
+
+import com.c4mprod.utils.Flip3dAnimation;
+import com.fabernovel.alertevoirie.entities.Constants;
+import com.fabernovel.alertevoirie.entities.JsonData;
+import com.fabernovel.alertevoirie.entities.Last_Location;
+import com.fabernovel.alertevoirie.utils.LocationHelper;
+import com.fabernovel.alertevoirie.utils.Utils;
+import com.fabernovel.alertevoirie.webservice.AVService;
+import com.fabernovel.alertevoirie.webservice.RequestListener;
 
 public class HomeActivity extends Activity implements OnClickListener, LocationListener, RequestListener {
     private static final int DIALOG_PROGRESS = 0;

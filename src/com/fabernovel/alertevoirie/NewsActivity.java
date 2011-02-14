@@ -2,7 +2,6 @@ package com.fabernovel.alertevoirie;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.TreeMap;
@@ -18,9 +17,9 @@ import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -29,16 +28,13 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.entities.Last_Location;
 import com.fabernovel.alertevoirie.utils.JSONAdapter;
-import com.fabernovel.alertevoirie.utils.Utils;
 import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
 
@@ -193,24 +189,36 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
                     JSONArray items = new JSONArray();
 
-                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS).length(); i++) {
-                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                 .getJSONArray(JsonData.PARAM_ONGOING_INCIDENTS).getJSONObject(i);
+                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER)
+                                                .getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS)
+                                                .length(); i++) {
+                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER)
+                                                 .getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                 .getJSONArray(JsonData.PARAM_ONGOING_INCIDENTS)
+                                                 .getJSONObject(i);
                         if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);// items.put(job);
                     }
 
-                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS).length(); i++) {
-                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                 .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS).getJSONObject(i);
+                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER)
+                                                .getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS)
+                                                .length(); i++) {
+                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER)
+                                                 .getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                 .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS)
+                                                 .getJSONObject(i);
                         if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);
                     }
 
-                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS).length(); i++) {
-                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                 .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS).getJSONObject(i);
+                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER)
+                                                .getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS)
+                                                .length(); i++) {
+                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER)
+                                                 .getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                 .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS)
+                                                 .getJSONObject(i);
                         if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);
                     }
 
@@ -274,7 +282,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
                 ImageView iw = (ImageView) v.findViewById(R.id.ImageView_icn);
                 iw.setVisibility(View.VISIBLE);
                 JSONObject item = (JSONObject) getItem(position);
-                Incident incident = Incident.fromJSONObject(item);
+                Incident incident = Incident.fromJSONObject(getApplicationContext(), item);
 
                 String status = null;
                 try {
@@ -353,7 +361,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
         i.putExtra("event", l.getAdapter().getItem(position).toString());
 
         try {
-            Incident incident = Incident.fromJSONObject(new JSONObject(((MagicAdapter) getListAdapter()).getItem(position).toString()));
+            Incident incident = Incident.fromJSONObject(this, new JSONObject(((MagicAdapter) getListAdapter()).getItem(position).toString()));
 
             if (lock.contains(incident.id)) return;
             /*

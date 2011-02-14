@@ -4,9 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.fabernovel.alertevoirie.entities.Constants;
-import com.fabernovel.alertevoirie.entities.PictoView;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -22,6 +19,9 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+
+import com.fabernovel.alertevoirie.entities.Constants;
+import com.fabernovel.alertevoirie.entities.PictoView;
 
 public class SelectZoomDetail extends Activity {
 

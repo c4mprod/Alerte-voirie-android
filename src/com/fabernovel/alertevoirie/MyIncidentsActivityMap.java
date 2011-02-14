@@ -1,5 +1,7 @@
 package com.fabernovel.alertevoirie;
 
+import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,9 +12,9 @@ import android.util.Log;
 import android.view.Window;
 import android.widget.CompoundButton;
 import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 import android.widget.ToggleButton;
-import android.widget.RadioGroup.OnCheckedChangeListener;
 
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.Incident;
@@ -37,10 +39,11 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
     protected int                checked;
     String[]                     title           = new String[3];
     private MapView              map;
-    int                          lat_min         = 999999999;
+    int                          lat_min         = Integer.MAX_VALUE;
     int                          lat_max         = 0;
-    int                          lon_min         = 999999999;
+    int                          lon_min         = Integer.MAX_VALUE;
     int                          lon_max         = 0;
+    SimpleItemizedOverlay        mOverlay;
 
     /** Called when the activity is first created. */
     @Override
@@ -53,6 +56,11 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
         map = (MapView) findViewById(R.id.MapView_mymap);
         map.setBuiltInZoomControls(true);
         tabs = (RadioGroup) findViewById(R.id.RadioGroup_tabs_map);
+
+        // mOverlay = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor), this, map);
+        map.getOverlays().add(mOverlay);
+        map.setSatellite(false);
+
         tbmap = (ToggleButton) findViewById(R.id.ToggleButton_Map);
         tbmap.setChecked(true);
         tbmap.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -167,6 +175,7 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
     }
 
     protected void setMapForTab(int gettabIndex) {
+        ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
         map.getOverlays().clear();
         JSONArray datas = null;
         try {
@@ -181,16 +190,16 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
             }
         }
 
-        lat_min = 999999999;
+        lat_min = Integer.MAX_VALUE;
         lat_max = 0;
-        lon_min = 999999999;
+        lon_min = Integer.MAX_VALUE;
         lon_max = 0;
 
         if (datas != null) {
             for (int i = 0; i < datas.length(); i++) {
                 try {
 
-                    Incident myIncident = Incident.fromJSONObject(datas.getJSONObject(i));
+                    Incident myIncident = Incident.fromJSONObject(this, datas.getJSONObject(i));
 
                     if (lat_min > (myIncident.latitude * 1E6)) lat_min = (int) (myIncident.latitude * 1E6);
                     if (lat_max < (myIncident.latitude * 1E6)) lat_max = (int) (myIncident.latitude * 1E6);
@@ -198,8 +207,7 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
                     if (lon_min > (myIncident.longitude * 1E6)) lon_min = (int) (myIncident.longitude * 1E6);
                     if (lon_max < (myIncident.longitude * 1E6)) lon_max = (int) (myIncident.longitude * 1E6);
 
-                    GeoPoint geo = new GeoPoint((int) (myIncident.latitude * 1E6), (int) (myIncident.longitude * 1E6));
-                    setMarker(geo, myIncident);
+                    items.add(myIncident);
                 } catch (JSONException e) {
                     Log.e(Constants.PROJECT_TAG, "Marker error", e);
                 }
@@ -223,16 +231,9 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
                 }
             }
         }
-    }
-
-    private void setMarker(final GeoPoint newGeo, Incident incident) {
-
-        SimpleItemizedOverlay cursor = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor), this, incident, map);
-        cursor.addOverlayItem(new OverlayItem(newGeo, incident.date, incident.description));
-        map.getOverlays().add(cursor);
-        map.setSatellite(false);
+        SimpleItemizedOverlay overlay = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor), this, map, items);
+        map.getOverlays().add(overlay);
         map.invalidate();
-
     }
 
     private int gettabIndex(int id) {

@@ -6,11 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.FileNameMap;
-import java.net.URI;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 import net.londatiga.android.ActionItem;
 import net.londatiga.android.QuickAction;
@@ -23,14 +19,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -42,7 +35,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -114,7 +106,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             findViewById(R.id.existing_incidents_layout).setVisibility(View.VISIBLE);
             try {
                 ImageDownloader imgd = new ImageDownloader(this);
-                currentIncident = Incident.fromJSONObject(new JSONObject(getIntent().getStringExtra("event")));
+                currentIncident = Incident.fromJSONObject(this, new JSONObject(getIntent().getStringExtra("event")));
                 setCategory(currentIncident.categoryId);
                 ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
                 ((TextView) findViewById(R.id.TextView_address)).setText(currentIncident.address);
@@ -761,7 +753,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                                           img_close);
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     AlertDialog alert;
-                    builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false)
+                    builder.setMessage(R.string.report_detail_new_report_ok)
+                           .setCancelable(false)
                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                public void onClick(DialogInterface dialog, int id) {
                                    ReportDetailsActivity.this.finish();
