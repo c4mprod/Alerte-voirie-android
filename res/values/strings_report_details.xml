@@ -8,4 +8,5 @@
 <string name="report_details_your_comment">Votre commentaire</string>
 <string name="report_detail_new_report_title">Nouveau rapport</string>
 <string name="report_detail_new_report_ok">Votre rapport a été envoyé</string>
+<string name="report_detail_update_ok">Ce rapport a été mis à jour</string>
 </resources>

@@ -38,6 +38,7 @@ import com.fabernovel.alertevoirie.webservice.RequestListener;
 public class ExistingIncidentsActivity extends ListActivity implements RequestListener, LocationListener {
     private static final int      DIALOG_PROGRESS = 0;
     private final ImageDownloader imageDownloader = new ImageDownloader();
+    private ProgressDialog mPd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,24 +80,24 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
     protected Dialog onCreateDialog(int id) {
         switch (id) {
             case DIALOG_PROGRESS:
-                ProgressDialog pd = new ProgressDialog(this);
-                pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                pd.setIndeterminate(true);
-                pd.setOnDismissListener(new OnDismissListener() {
+                mPd = new ProgressDialog(this);
+                mPd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                mPd.setIndeterminate(true);
+                mPd.setOnDismissListener(new OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         removeDialog(DIALOG_PROGRESS);
                     }
                 });
-                pd.setOnCancelListener(new OnCancelListener() {
+                mPd.setOnCancelListener(new OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
                         AVService.getInstance(ExistingIncidentsActivity.this).cancelTask();
                         finish();
                     }
                 });
-                pd.setMessage(getString(R.string.ui_message_loading));
-                return pd;
+                mPd.setMessage(getString(R.string.ui_message_loading));
+                return mPd;
 
             default:
                 return super.onCreateDialog(id);
@@ -132,7 +133,9 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
 
         }
 
-        dismissDialog(DIALOG_PROGRESS);
+        if (mPd!= null) {
+            mPd.dismiss();
+        }
 
     }
 

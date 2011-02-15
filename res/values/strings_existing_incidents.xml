@@ -20,13 +20,13 @@
 		<string
 				name="existing_incidents_status">"Personne n'a confirmé cet incident"</string>
 		<string
-				name="news_incidents_created">"Incident créé "</string>
+				name="news_incidents_created">"L'incident a été créé "</string>
 		<string
-				name="news_incidents_resolved">"Incident résolu "</string>
+				name="news_incidents_resolved">"L'incident a été résolu "</string>
 		<string
-				name="news_incidents_confirmed">"Incident confirmé "</string>
+				name="news_incidents_confirmed">"L'incident a été confirmé "</string>
 		<string
-				name="news_incidents_invalidated">"Incident invalidé "</string>
+				name="news_incidents_invalidated">"L'incident a été invalidé "</string>
 		<string
 				name="news_incidents_picture_added">"Photo ajoutée dans "</string>
 </resources>

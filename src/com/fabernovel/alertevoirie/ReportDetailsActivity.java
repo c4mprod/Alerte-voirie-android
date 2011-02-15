@@ -69,6 +69,12 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     private static final int    DIALOG_PROGRESS             = 0;
 
     private static final int    REQUEST_COMMENT_BEFORE_EXIT = 4;
+
+    private static final int    ACTION_SOLVE_INCIDENT       = 1;
+    private static final int    ACTION_CONFIRM_INCIDENT     = 2;
+
+    private static final int    ACTION_INVALID_INCIDENT     = 3;
+
     private boolean             hasPic;
 
     private Uri                 uriOfPicFromCamera;
@@ -78,6 +84,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     private String              img_comment                 = "";
 
     private boolean             canvalidate                 = false;
+
+    private ProgressDialog      mPd;
+
+    private int                 mCurrentAction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -153,9 +163,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     @Override
     public void onClick(View v) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        AlertDialog alert;
+        // AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // AlertDialog alert;
         Log.d(Constants.PROJECT_TAG, "onClick : " + v.getId());
+        mCurrentAction = -1;
         switch (v.getId()) {
             case R.id.ImageView_close:
                 final ActionItem actionPhoto = new ActionItem();
@@ -278,28 +289,19 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 break;
 
             case R.id.existing_incident_solved:
+                mCurrentAction = ACTION_SOLVE_INCIDENT;
                 UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_RESOLVED);
-                builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        ReportDetailsActivity.this.finish();
-                        // Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
-                        ReportDetailsActivity.this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                    }
-                });
-                alert = builder.create();
-                alert.show();
+                // Nico : show this after request is complete !
+                // builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
+                // alert = builder.create();
+                // alert.show();
                 break;
             case R.id.existing_incidents_confirmed:
+                mCurrentAction = ACTION_CONFIRM_INCIDENT;
                 UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_CONFIRMED);
-                builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        ReportDetailsActivity.this.finish();
-                        // Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
-                        ReportDetailsActivity.this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                    }
-                });
-                alert = builder.create();
-                alert.show();
+                // builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
+                // alert = builder.create();
+                // alert.show();
                 break;
             case R.id.existing_incidents_add_picture:
                 final ActionItem actionNew = new ActionItem();
@@ -336,15 +338,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 break;
             case R.id.existing_incidents_invalid:
                 UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_INVALID);
-                builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        ReportDetailsActivity.this.finish();
-                        // Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
-                        ReportDetailsActivity.this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                    }
-                });
-                alert = builder.create();
-                alert.show();
+                mCurrentAction = ACTION_INVALID_INCIDENT;
+                // builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
+                // alert = builder.create();
+                // alert.show();
                 break;
             case R.id.Button_validate:
 
@@ -728,6 +725,11 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     @Override
     public void onRequestcompleted(int requestCode, Object result) {
+        if (mPd != null && mPd.isShowing()) {
+            // clear pd from memory to avoid progress bar freeze when showed again
+            removeDialog(DIALOG_PROGRESS);
+        }
+
         if (requestCode == AVService.REQUEST_JSON && result != null) {
             try {
                 Log.d(Constants.PROJECT_TAG, "Request result" + (String) result);
@@ -753,22 +755,61 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                                           img_close);
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     AlertDialog alert;
-                    builder.setMessage(R.string.report_detail_new_report_ok)
-                           .setCancelable(false)
-                           .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                               public void onClick(DialogInterface dialog, int id) {
-                                   ReportDetailsActivity.this.finish();
-                                   // Toast.makeText(this, R.string.report_detail_new_report_ok, Toast.LENGTH_SHORT).show();
-                                   ReportDetailsActivity.this.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                               }
-                           });
+                    builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
                     alert = builder.create();
                     alert.show();
                 } else {
-                    if ((answer.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS)) == 18) {
-                        Toast.makeText(this, "Incident déjà confirmé", Toast.LENGTH_LONG).show();
+                    Log.d("AlerteVoirie_PM", "answer : " + answer);
+
+                    // hotfix nico : here we can have valid answer for incident updates !!!
+                    // handle answer and display popup here instead of when we click on buttons
+                    int statuscode = answer.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS);
+
+                    if (statuscode == 0) {
+                        // FIXME end activity when resolve incident ??
+                        switch (mCurrentAction) {
+                            case ACTION_CONFIRM_INCIDENT:
+                                new AlertDialog.Builder(this).setMessage(R.string.news_incidents_confirmed).setPositiveButton(android.R.string.ok, null).show();
+                                break;
+                            case ACTION_INVALID_INCIDENT: {
+                                AlertDialog dialog = new AlertDialog.Builder(this).setMessage(R.string.news_incidents_invalidated)
+                                                                                  .setPositiveButton(android.R.string.ok, null)
+                                                                                  .create();
+                                dialog.setOnDismissListener(new OnDismissListener() {
+                                    @Override
+                                    public void onDismiss(DialogInterface dialog) {
+                                        finish();
+                                    }
+                                });
+                                dialog.show();
+                                break;
+                            }
+                            case ACTION_SOLVE_INCIDENT: {
+                                AlertDialog dialog = new AlertDialog.Builder(this).setMessage(R.string.news_incidents_resolved)
+                                                                                  .setPositiveButton(android.R.string.ok, null)
+                                                                                  .create();
+                                dialog.setOnDismissListener(new OnDismissListener() {
+                                    @Override
+                                    public void onDismiss(DialogInterface dialog) {
+                                        finish();
+                                    }
+                                });
+                                dialog.show();
+                                break;
+                            }
+                            default:
+                                // assume it's a generic update request in other cases ...
+                                new AlertDialog.Builder(this).setMessage(R.string.report_detail_update_ok).setPositiveButton(android.R.string.ok, null).show();
+                                break;
+                        }
                     } else {
-                        Toast.makeText(this, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                        // other things
+                        // FIXME show popups instead of toasts !
+                        if ((answer.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS)) == 18) {
+                            Toast.makeText(this, "Incident déjà confirmé", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(this, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
             } catch (JSONException e) {
@@ -788,24 +829,24 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     protected Dialog onCreateDialog(int id) {
         switch (id) {
             case DIALOG_PROGRESS:
-                ProgressDialog pd = new ProgressDialog(this);
-                pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                pd.setIndeterminate(true);
-                pd.setOnDismissListener(new OnDismissListener() {
+                mPd = new ProgressDialog(this);
+                mPd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                mPd.setIndeterminate(true);
+                mPd.setOnDismissListener(new OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         removeDialog(DIALOG_PROGRESS);
                     }
                 });
-                pd.setOnCancelListener(new OnCancelListener() {
+                mPd.setOnCancelListener(new OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
                         AVService.getInstance(ReportDetailsActivity.this).cancelTask();
                         finish();
                     }
                 });
-                pd.setMessage(getString(R.string.ui_message_loading));
-                return pd;
+                mPd.setMessage(getString(R.string.ui_message_loading));
+                return mPd;
 
             default:
                 return super.onCreateDialog(id);
