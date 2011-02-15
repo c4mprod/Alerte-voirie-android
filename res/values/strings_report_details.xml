@@ -9,4 +9,5 @@
 <string name="report_detail_new_report_title">Nouveau rapport</string>
 <string name="report_detail_new_report_ok">Votre rapport a été envoyé</string>
 <string name="report_detail_update_ok">Ce rapport a été mis à jour</string>
+<string name="report_detail_confirm_question">Cet incident a-t-il été résolu ?</string>
 </resources>

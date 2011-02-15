@@ -290,15 +290,24 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
             case R.id.existing_incident_solved:
                 mCurrentAction = ACTION_SOLVE_INCIDENT;
-                UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_RESOLVED);
-                // Nico : show this after request is complete !
-                // builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
-                // alert = builder.create();
-                // alert.show();
+                DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == Dialog.BUTTON_POSITIVE) {
+                            UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_RESOLVED);
+                        }
+                        dialog.dismiss();
+                    }
+                };
+                new AlertDialog.Builder(this).setMessage(R.string.report_detail_confirm_question)
+                                             .setCancelable(false)
+                                             .setPositiveButton(R.string.oui, listener)
+                                             .setNegativeButton(R.string.non, listener).show();
                 break;
             case R.id.existing_incidents_confirmed:
                 mCurrentAction = ACTION_CONFIRM_INCIDENT;
                 UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_CONFIRMED);
+                // Nico : show this after request is complete !
                 // builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
                 // alert = builder.create();
                 // alert.show();
