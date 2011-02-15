@@ -39,7 +39,7 @@ public class Incident extends OverlayItem {
     public JSONArray         pictures_far;
     public JSONArray         pictures_close;
     public int               invalidations;
-    public static JSONObject json;
+    public JSONObject        json;
 
     public JSONObject getNewIncidentRequest(Context c) {
         try {
@@ -74,7 +74,6 @@ public class Incident extends OverlayItem {
 
     public static Incident fromJSONObject(Context c, JSONObject obj) {
         try {
-            json = obj;
             Log.d(Constants.PROJECT_TAG, obj.toString());
 
             double latitude = obj.getDouble(JsonData.PARAM_INCIDENT_LATITUDE);
@@ -82,6 +81,7 @@ public class Incident extends OverlayItem {
             String name = obj.getString(JsonData.PARAM_INCIDENT_DESCRIPTION);
 
             Incident result = new Incident(new GeoPoint((int) (latitude * 1E6), (int) (longitude * 1E6)), name, "snippet");
+            result.json = obj;
             result.latitude = latitude;
             result.longitude = longitude;
             result.address = obj.getString(JsonData.PARAM_INCIDENT_ADDRESS);
@@ -96,7 +96,7 @@ public class Incident extends OverlayItem {
             result.pictures_far = obj.getJSONObject(JsonData.PARAM_INCIDENT_PICTURES).getJSONArray(JsonData.PARAM_INCIDENT_PICTURES_FAR);
             result.pictures_close = obj.getJSONObject(JsonData.PARAM_INCIDENT_PICTURES).getJSONArray(JsonData.PARAM_INCIDENT_PICTURES_CLOSE);
 
-            result.setMarker( c.getResources().getDrawable(R.drawable.map_cursor));
+            result.setMarker(c.getResources().getDrawable(R.drawable.map_cursor));
             return result;
         } catch (JSONException e) {
             Log.e(Constants.PROJECT_TAG, "Can't create Incident", e);

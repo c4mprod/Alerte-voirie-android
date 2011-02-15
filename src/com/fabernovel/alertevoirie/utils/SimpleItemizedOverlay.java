@@ -27,29 +27,27 @@ public class SimpleItemizedOverlay extends ItemizedOverlay {
     private View                   mBubbleView;
     private Context                c;
     private MapView                mMapView;
-    private Drawable defaultMarker;
 
-    public SimpleItemizedOverlay(Drawable defaultMarker, Context context, MapView mapview,ArrayList<OverlayItem> overlayItems ) {
+    public SimpleItemizedOverlay(Drawable defaultMarker, Context context, MapView mapview, ArrayList<OverlayItem> overlayItems) {
         super(defaultMarker);
-        defaultMarker = boundCenterBottom(defaultMarker);
+        boundCenterBottom(defaultMarker);
         c = context;
         this.mMapView = mapview;
-        
+
         mOverlays = overlayItems;
         populate();
     }
 
-//    public void addOverlayItem(OverlayItem overlay) {
-//        mOverlays.add(overlay);
-//        populate();
-//    }
+    // public void addOverlayItem(OverlayItem overlay) {
+    // mOverlays.add(overlay);
+    // populate();
+    // }
 
     @Override
     protected OverlayItem createItem(int i) {
-        Log.d("AlerteVoirie_PM", "create item");
         OverlayItem overlayItem = mOverlays.get(i);
         boundCenterBottom(overlayItem.getMarker(0));
-//        overlayItem.setMarker(defaultMarker);
+        // overlayItem.setMarker(defaultMarker);
         return overlayItem;
     }
 
@@ -73,29 +71,31 @@ public class SimpleItemizedOverlay extends ItemizedOverlay {
             params.mode = MapView.LayoutParams.MODE_MAP;
             if (mBubbleView == null) {
                 mBubbleView = ((LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.view_map_bubble, null);
-                
-                if (tappedIncident.invalidations > 0 || tappedIncident.state == 'R') {
-                    mBubbleView.findViewById(R.id.Bubble_arrow).setVisibility(View.VISIBLE);
-                    mBubbleView.setOnClickListener(new OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
+            }
 
-                            Intent i = new Intent(c, ReportDetailsActivity.class);
-                            i.putExtra("existing", true);
-                            i.putExtra("event", (String) mBubbleView.getTag());
-                            c.startActivity(i);
+            if (tappedIncident.invalidations == 0 || tappedIncident.state != 'R') {
+                mBubbleView.findViewById(R.id.Bubble_arrow).setVisibility(View.VISIBLE);
+                mBubbleView.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
 
-                        }
-                    });
-                } else {
-                    mBubbleView.findViewById(R.id.Bubble_arrow).setVisibility(View.GONE);
-                }
+                        Intent i = new Intent(c, ReportDetailsActivity.class);
+                        i.putExtra("existing", true);
+                        i.putExtra("event", (String) mBubbleView.getTag());
+                        c.startActivity(i);
+
+                    }
+                });
+            } else {
+                mBubbleView.findViewById(R.id.Bubble_arrow).setVisibility(View.GONE);
+                mBubbleView.setOnClickListener(null);
             }
             TextView title = (TextView) mBubbleView.findViewById(R.id.TextView_title);
             TextView subtitle = (TextView) mBubbleView.findViewById(R.id.TextView_subtitle);
-            
+
             title.setText(tappedIncident.description);
             subtitle.setText(tappedIncident.address);
+            Log.d("AlerteVoirie_PM", "tapped incident "+ tappedIncident.toString());
             mBubbleView.setTag(tappedIncident.toString());
             mMapView.addView(mBubbleView, params);
             mMapView.getController().animateTo(tapped.getPoint());
