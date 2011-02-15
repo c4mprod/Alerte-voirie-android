@@ -16,15 +16,19 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
+import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.fabernovel.alertevoirie.entities.Constants;
+import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.utils.JSONAdapter;
 import com.fabernovel.alertevoirie.utils.Utils;
@@ -64,7 +68,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
                     i.putExtra("tab3", title[2]);
                     i.putExtra("datas", data.toString());
                     i.putExtra("tab", checked);
-                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);//.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);// .addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     startActivity(i);
                     overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 }
@@ -172,9 +176,9 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
                                                                                    : INCIDENTS[i].equals("updated_incidents") ? getString(R.string.home_label_update)
                                                                                                                              : INCIDENTS[i].equals("resolved_incidents") ? getString(R.string.home_label_solved)
                                                                                                                                                                         : "");
-                            
+
                             if (Integer.parseInt(answer.getString(INCIDENTS[i])) > 1 && INCIDENTS[i].equals("resolved_incidents")) title[i] += "s";
-                            
+
                             ((TextView) tabs.getChildAt(i)).setText(title[i]);
                             if (title[i].startsWith("0")) ((TextView) tabs.getChildAt(i)).setEnabled(false);
 
@@ -251,10 +255,21 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
         }
     }
 
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        Incident tappedIncident = Incident.fromJSONObject(this, (JSONObject) l.getItemAtPosition(position));
+        if (tappedIncident.invalidations == 0 || tappedIncident.state != 'R') {
+            Intent i = new Intent(this, ReportDetailsActivity.class);
+            i.putExtra("existing", true);
+            i.putExtra("event", tappedIncident.json.toString());
+            startActivity(i);
+        }
+    }
+
     private void setAdapterForTab(int tab) {
 
         try {
-            //Log.d(Constants.PROJECT_TAG, data.getJSONArray(INCIDENTS[tab]).toString());
+            // Log.d(Constants.PROJECT_TAG, data.getJSONArray(INCIDENTS[tab]).toString());
 
             setListAdapter(new JSONAdapter(this, data.getJSONArray(INCIDENTS[tab]), R.layout.cell_report_noicon, new String[] {
                     JsonData.PARAM_INCIDENT_DESCRIPTION, JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }, null,
