@@ -8,6 +8,7 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -18,7 +19,6 @@ public class PictoView extends ImageView {
 
     private int      degree      = 0;
     private float    lastx       = 0, lasty = 0;
-    private float    curx        = 0, cury = 0;
 
     Matrix           matrix      = new Matrix();
     Matrix           savedMatrix = new Matrix();
@@ -28,68 +28,87 @@ public class PictoView extends ImageView {
     static final int DRAG        = 1;
     static final int ROTATE      = 2;
     int              mode        = NONE;
-    private float    newcenterx  = 0;
-    private float    newcentery  = 0;
+    private float    offsetx     = 0;
+    private float    offsety     = 0;
     private boolean  firstmove   = false;
     Bitmap           arrow;
 
     public PictoView(Context context) {
         super(context);
+        setDrawingCacheEnabled(true);
 
     }
 
     public PictoView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
+        setDrawingCacheEnabled(true);
     }
 
     public PictoView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        setDrawingCacheEnabled(true);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        //dumpEvent(event);
+        // dumpEvent(event);
 
-        Log.d(Constants.PROJECT_TAG, "1:" + (event.getX() < (getWidth() / 2) + newcenterx + 50));
-        Log.d(Constants.PROJECT_TAG, "2:" + (event.getX() > (getWidth() / 2) + newcenterx - 50));
-        Log.d(Constants.PROJECT_TAG, "3:" + (event.getY() < (getHeight() / 2) + newcentery + 50));
-        Log.d(Constants.PROJECT_TAG, "4:" + (event.getX() > (getHeight() / 2) + newcentery - 50));
+        Log.d(Constants.PROJECT_TAG, "1:" + (event.getX() < (getWidth() / 2) + offsetx + 50));
+        Log.d(Constants.PROJECT_TAG, "2:" + (event.getX() > (getWidth() / 2) + offsetx - 50));
+        Log.d(Constants.PROJECT_TAG, "3:" + (event.getY() < (getHeight() / 2) + offsety + 50));
+        Log.d(Constants.PROJECT_TAG, "4:" + (event.getX() > (getHeight() / 2) + offsety - 50));
 
-        if (((event.getX() < (getWidth() / 2) + newcenterx + 100 && event.getX() > (getWidth() / 2) + newcenterx - 100) && (event.getY() < (getHeight() / 2)
-                                                                                                                                         + newcentery + 100 && event.getY() > (getHeight() / 2)
-                                                                                                                                                                             + newcentery
-                                                                                                                                                                             - 100))) {
-            switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                case MotionEvent.ACTION_DOWN:
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                if (((event.getX() < (getWidth() / 2) + offsetx + 100 && event.getX() > (getWidth() / 2) + offsetx - 100) && (event.getY() < (getHeight() / 2)
+                                                                                                                                             + offsety + 100 && event.getY() > (getHeight() / 2)
+                                                                                                                                                                               + offsety
+                                                                                                                                                                               - 100))) {
                     if (lastx == 0 && lasty == 0) {
                         firstmove = true;
-                        lastx = event.getX();
-                        lasty = event.getY();
-
                     }
+                    lastx = event.getX();
+                    lasty = event.getY();
+
                     Log.d(Constants.PROJECT_TAG, "mode=DRAG");
                     mode = DRAG;
-                    break;
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_POINTER_UP:
-                    mode = NONE;
-                    Log.d(Constants.PROJECT_TAG, "mode=NONE");
-                    break;
-                case MotionEvent.ACTION_POINTER_DOWN:
+                } else {
                     mode = ROTATE;
-                    Log.d(Constants.PROJECT_TAG, "mode=ROTATE");
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    if (mode == DRAG) {
-                        curx = event.getX();
-                        cury = event.getY();
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_POINTER_UP:
+                mode = NONE;
+                Log.d(Constants.PROJECT_TAG, "mode=NONE");
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                mode = ROTATE;
+                Log.d(Constants.PROJECT_TAG, "mode=ROTATE");
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mode == DRAG) {
+                    float deltax = event.getX() - lastx;
+                    float deltay = event.getY() - lasty;
+                    lastx = event.getX();
+                    lasty = event.getY();
+                    offsetx += deltax;
+                    offsety += deltay;
+                    // constrain arrow in view
+                    int halfWidth = getWidth() / 2;
+                    int halfHeight = getHeight() / 2;
+                    if (offsetx < -halfWidth) {
+                        offsetx = -halfWidth;
+                    } else if (offsetx > halfWidth) {
+                        offsetx = halfWidth;
                     }
-                    break;
-            }
-
-        } else {
-            mode = ROTATE;
+                    if (offsety < -halfHeight) {
+                        offsety = -halfHeight;
+                    } else if (offsety > halfHeight) {
+                        offsety = halfHeight;
+                    }
+                    invalidate();
+                }
+                break;
         }
 
         invalidate();
@@ -106,25 +125,23 @@ public class PictoView extends ImageView {
         }
 
         if (mode == DRAG) {
-            canvas.rotate(degree, (getWidth() / 2) + newcenterx, (getHeight() / 2) + newcentery);
-            newcenterx = curx - lastx;
-            newcentery = cury - lasty;
+            canvas.rotate(degree, (getWidth() / 2) + offsetx, (getHeight() / 2) + offsety);
 
         } else if (mode == ROTATE) {
-            canvas.rotate(degree += 2, (getWidth() / 2) + newcenterx, (getHeight() / 2) + newcentery);
+            canvas.rotate(degree += 2, (getWidth() / 2) + offsetx, (getHeight() / 2) + offsety);
 
         } else {
-            canvas.rotate(degree, (getWidth() / 2) + newcenterx, (getHeight() / 2) + newcentery);
+            canvas.rotate(degree, (getWidth() / 2) + offsetx, (getHeight() / 2) + offsety);
 
         }
 
         if (firstmove) {
             firstmove = false;
-            newcenterx = 0;
-            newcentery = 0;
+            offsetx = 0;
+            offsety = 0;
         }
-        Log.d(Constants.PROJECT_TAG, "Translation : " + newcenterx + "," + newcentery);
-        canvas.translate(newcenterx, newcentery);
+        Log.d(Constants.PROJECT_TAG, "Translation : " + offsetx + "," + offsety);
+        canvas.translate(offsetx, offsety);
 
         super.onDraw(canvas);
 
@@ -166,61 +183,31 @@ public class PictoView extends ImageView {
      * @param y
      * @throws FileNotFoundException
      */
-    public Bitmap setSupport(Bitmap picture, float coeffx, float coeffy, Context c) throws FileNotFoundException {
-
+    public Bitmap setSupport(Bitmap picture, float targetx, float targety, Context c) throws FileNotFoundException {
         // 320*480
-  
-        int width = this.getDrawable().getIntrinsicWidth();
-        int height = this.getDrawable().getIntrinsicHeight();
-        int arrow_x = (int) ((getWidth()-width)/2 * coeffx);
-        int arrow_y = (int) ((getHeight()-height)/2 * coeffy);
 
-        Bitmap arrow = ((BitmapDrawable) this.getDrawable()).getBitmap();//Bitmap.createBitmap(((BitmapDrawable) this.getDrawable()).getBitmap(), 0, 0, width, height);
-        
-        /*
-         * if (picture.getWidth() > picture.getHeight()) {
-         * Matrix m = new Matrix();
-         * m.postRotate(90);
-         * picture = Bitmap.createBitmap(picture, 0, 0, picture.getWidth(), picture.getHeight(), m, true);
-         * }
-         */
+        Bitmap arrow = ((BitmapDrawable) this.getDrawable()).getBitmap();
+
+        float coeffx = targetx / getWidth();
+        float coeffy = targety / getHeight();
+        int scaledOffsetX = (int) (offsetx * coeffx);
+        int scaledOffsetY = (int) (offsety * coeffy);
 
         // createa matrix for the manipulation
         Matrix matrix = new Matrix();
-        
         // rotate the Bitmap
-        matrix.postRotate(degree, (getWidth() / 2) + newcenterx, (getHeight() / 2) + newcentery);
-
+        matrix.postRotate(degree, (arrow.getWidth() / 2), (arrow.getHeight() / 2));
         // recreate the new Bitmap
-        arrow = Bitmap.createBitmap(arrow, 0, 0, width, height, matrix, true);
+        arrow = Bitmap.createBitmap(arrow, 0, 0, arrow.getWidth(), arrow.getHeight(), matrix, true);
 
-        int[] pixels1 = new int[picture.getWidth() * picture.getHeight()];
-        int[] pixels2 = new int[width * height];
+        Bitmap b = picture.copy(picture.getConfig(), true);
+        Canvas myCanvas = new Canvas(b);
 
-        try {
-            picture.getPixels(pixels1, 0, picture.getWidth(), 0, 0, picture.getWidth(), picture.getHeight());
-            arrow.getPixels(pixels2, 0, width, 0, 0, width, height);
-        } catch (IllegalArgumentException e) {
-            // TODO:
-        } catch (ArrayIndexOutOfBoundsException e) {
-            // TODO:
-        }
-
-        Bitmap b = Bitmap.createBitmap(picture.getWidth(), picture.getHeight(), picture.getConfig());
-        Canvas myCanvas = new Canvas();
-
-        myCanvas.setBitmap(b);
         // and then just draw them on canvas
-        myCanvas.drawBitmap(pixels1, 0, picture.getWidth(), 0, 0, picture.getWidth(), picture.getHeight(), true, null);
-        myCanvas.drawBitmap(pixels2, 0, width, arrow_x, arrow_y, width, height, true, null);
+        myCanvas.drawBitmap(arrow, (b.getWidth() - arrow.getWidth()) / 2 + scaledOffsetX, (b.getHeight() - arrow.getHeight()) / 2 + scaledOffsetY, new Paint());
 
-        picture = b;
-
-        // d.setDrawableByLayerId(R.id.final_photo_arrow, new BitmapDrawable(arrow));
-
-        picture.compress(CompressFormat.JPEG, 80, c.openFileOutput("arrowed.jpg", Context.MODE_PRIVATE));
-
-        return picture;
+        b.compress(CompressFormat.JPEG, 80, c.openFileOutput("arrowed.jpg", Context.MODE_PRIVATE));
+        return b;
     }
 
 }

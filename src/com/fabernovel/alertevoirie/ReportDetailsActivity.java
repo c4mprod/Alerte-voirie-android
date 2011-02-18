@@ -138,8 +138,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     ((TextView) findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms + " personne confirme cet incident");
                 }
 
-                imgd.download((String) currentIncident.pictures_close.get(0), ((ImageView) findViewById(R.id.ImageView_close)));
                 imgd.download((String) currentIncident.pictures_far.get(0), ((ImageView) findViewById(R.id.ImageView_far)));
+                if (currentIncident.pictures_close.length() > 0) {
+                    imgd.download((String) currentIncident.pictures_close.get(0), ((ImageView) findViewById(R.id.ImageView_close)));
+                }
 
             } catch (JSONException e) {
                 Log.e(Constants.PROJECT_TAG, "JSONException in onCreate", e);
@@ -378,6 +380,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     protected void loadZoom() {
         canvalidate = true;
         findViewById(R.id.LinearLayout_comment).setVisibility(View.VISIBLE);
+        Log.d("AlerteVoirie_PM", "launch the damn thing !");
         Intent i = new Intent(ReportDetailsActivity.this, SelectZoomDetail.class);
         i.putExtra("comment", img_comment);
         startActivityForResult(i, REQUEST_DETAILS);
@@ -535,6 +538,9 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
                         if (requestCode != R.id.existing_incidents_add_picture) {
                             setPictureToImageView(pictureName, (ImageView) findViewById(requestCode));
+                            if (requestCode == R.id.ImageView_far) {
+                                loadZoom();
+                            }
                             if (requestCode == R.id.ImageView_far && ((TextView) findViewById(R.id.TextView_address)).getText().length() > 0) {
                                 ((Button) findViewById(R.id.Button_validate)).setEnabled(true);
                             }
@@ -607,6 +613,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             case REQUEST_DETAILS:
                 if (resultCode == RESULT_OK) {
                     // startActivityForResult(data, requestCode)
+                    
+                    //set new img
+                    setPictureToImageView("arrowed.jpg", (ImageView) findViewById(R.id.ImageView_far));
+                    
                     loadComment(REQUEST_COMMENT);
                 }
                 break;
@@ -685,9 +695,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
             if (!hasPic) hasPic = (imageView.getId() == R.id.ImageView_far);
 
-            if (hasPic && (imageView.getId() == R.id.ImageView_far)) {
-                loadZoom();
-            }
+            //WTF ?
+//            if (hasPic && (imageView.getId() == R.id.ImageView_far)) {
+//                loadZoom();
+//            }
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -812,11 +823,13 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                 break;
                         }
                     } else {
+                        Log.d("AlerteVoirie_PM", "json de ouf : "+result);
                         // other things
                         // FIXME show popups instead of toasts !
                         if ((answer.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS)) == 18) {
-                            Toast.makeText(this, "Incident déjà confirmé", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, getString(R.string.incident_already_confirmed), Toast.LENGTH_LONG).show();
                         } else {
+                            Log.d("AlerteVoirie_PM", "erreur ?");
                             Toast.makeText(this, getString(R.string.server_error), Toast.LENGTH_LONG).show();
                         }
                     }
