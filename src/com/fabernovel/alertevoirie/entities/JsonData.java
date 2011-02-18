@@ -7,6 +7,7 @@ public interface JsonData {
     String VALUE_REQUEST_GET_INCIDENTS_STATS       = "getIncidentStats";
     String VALUE_REQUEST_NEW_INCIDENT              = "saveIncident";
     String VALUE_REQUEST_GET_MY_INCIDENTS          = "getReports";
+    String VALUE_REQUEST_GET_IMAGES                = "getIncidentPhotos";
 
     String VALUE_RADIUS_FAR                        = "far";
     String VALUE_RADIUS_CLOSE                      = "close";
@@ -59,4 +60,5 @@ public interface JsonData {
     String PARAM_INCIDENT_INVALIDATION             = "invalidations";
     String PARAM_INCIDENT_LOG                      = "incidentLog";
 
+    String PARAM_IMAGES_INCIDENT_ID                = "incidentId";
 }

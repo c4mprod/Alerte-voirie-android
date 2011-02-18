@@ -33,6 +33,8 @@ import com.fabernovel.alertevoirie.entities.JsonData;
 public class AVService {
     public static final int     REQUEST_ERROR  = 0;
     public static final int     REQUEST_JSON   = 1;
+    public static final int    REQUEST_IMAGE = 2;
+
 
     private static final String AV_URL_PREPROD = "http://alerte-voirie.ppd.c4mprod.com/api/";
     private static final String AV_URL_PROD    = "http://www.alertevoirie.com/api/";
@@ -131,7 +133,8 @@ public class AVService {
      *            The file containing close image
      */
     @SuppressWarnings("unchecked")
-    public void postImage(String udid, String img_comment, String incident_id, File image_far, File image_near) {
+    public void postImage(RequestListener listener, String udid, String img_comment, String incident_id, File image_far, File image_near) {
+        this.listener = listener;
 
         ArrayList<Object> image_1 = new ArrayList<Object>();
         ArrayList<Object> image_2 = new ArrayList<Object>();
@@ -150,20 +153,23 @@ public class AVService {
             image_1.add(image_far);
         }
 
-        image_2.add(AV_URL + "photo/");
-        image_2.add(udid);
-        image_2.add("");
-        image_2.add(incident_id);
-        image_2.add(AV_IMG_CLOSE);
-        image_2.add(image_near);
+        if (image_near != null) {
+            image_2.add(AV_URL + "photo/");
+            image_2.add(udid);
+            image_2.add("");
+            image_2.add(incident_id);
+            image_2.add(AV_IMG_CLOSE);
+            image_2.add(image_near);
+        }
 
         cancelTask();
 
-        if (image_far != null) {
-            currentTask = new postImage().execute(image_1, image_2);
-        } else {
-            currentTask = new postImage().execute(image_2);
-        }
+        currentTask = new postImage().execute(image_1.size() > 0 ? image_1 : null, image_2.size() > 0 ? image_2 : null);
+        // if (image_far != null) {
+        // currentTask = new postImage().execute(image_1, image_2);
+        // } else {
+        // currentTask = new postImage().execute(image_2);
+        // }
 
     }
 
@@ -187,6 +193,7 @@ public class AVService {
 
     private class postImage extends AsyncTask<ArrayList<Object>, Integer, HttpResponse[]> {
 
+
         @Override
         protected HttpResponse[] doInBackground(ArrayList<Object>... params) {
 
@@ -194,52 +201,54 @@ public class AVService {
             int i = 0;
 
             for (ArrayList<Object> PicArray : params) {
+                if (PicArray != null) {
 
-                HttpClient httpClient = new DefaultHttpClient();
-                HttpContext localContext = new BasicHttpContext();
-                HttpPost httpPost = new HttpPost((String) PicArray.get(0));
+                    HttpClient httpClient = new DefaultHttpClient();
+                    HttpContext localContext = new BasicHttpContext();
+                    HttpPost httpPost = new HttpPost((String) PicArray.get(0));
 
-                httpPost.addHeader("udid", (String) PicArray.get(1));
-                Log.d(Constants.PROJECT_TAG, "length : " + ((String) PicArray.get(2)).length());
-                httpPost.addHeader("img_comment", (String) PicArray.get(2));
-                httpPost.addHeader("incident_id", (String) PicArray.get(3));
-                httpPost.addHeader("type", (String) PicArray.get(4));
+                    httpPost.addHeader("udid", (String) PicArray.get(1));
+                    Log.d(Constants.PROJECT_TAG, "length : " + ((String) PicArray.get(2)).length());
+                    httpPost.addHeader("img_comment", (String) PicArray.get(2));
+                    httpPost.addHeader("incident_id", (String) PicArray.get(3));
+                    httpPost.addHeader("type", (String) PicArray.get(4));
 
-                try {
-                    /*
-                     * MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
-                     * for (int index = 0; index < nameValuePairs.size(); index++) {
-                     * if (nameValuePairs.get(index).getName().equalsIgnoreCase("image")) {
-                     * // If the key equals to "image", we use FileBody to transfer the data
-                     * entity.addPart(nameValuePairs.get(index).getName(), new FileBody(new File(nameValuePairs.get(index).getValue())));
-                     * } else {
-                     * // Normal string data
-                     * entity.addPart(nameValuePairs.get(index).getName(), new StringBody(nameValuePairs.get(index).getValue()));
-                     * }
-                     * }
-                     */
+                    try {
+                        /*
+                         * MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+                         * for (int index = 0; index < nameValuePairs.size(); index++) {
+                         * if (nameValuePairs.get(index).getName().equalsIgnoreCase("image")) {
+                         * // If the key equals to "image", we use FileBody to transfer the data
+                         * entity.addPart(nameValuePairs.get(index).getName(), new FileBody(new File(nameValuePairs.get(index).getValue())));
+                         * } else {
+                         * // Normal string data
+                         * entity.addPart(nameValuePairs.get(index).getName(), new StringBody(nameValuePairs.get(index).getValue()));
+                         * }
+                         * }
+                         */
 
-                    /*
-                     * MultipartEntity file = new MultipartEntity();
-                     * ContentBody cbFile = new FileBody((File) PicArray.get(5), "image/jpeg");
-                     * file.addPart("userfile", cbFile);
-                     */
+                        /*
+                         * MultipartEntity file = new MultipartEntity();
+                         * ContentBody cbFile = new FileBody((File) PicArray.get(5), "image/jpeg");
+                         * file.addPart("userfile", cbFile);
+                         */
 
-                    FileEntity file = new FileEntity((File) PicArray.get(5), "image/jpeg");
-                    file.setContentType("image/jpeg");
+                        FileEntity file = new FileEntity((File) PicArray.get(5), "image/jpeg");
+                        file.setContentType("image/jpeg");
 
-                    httpPost.setEntity(file);
+                        httpPost.setEntity(file);
 
-                    Log.d(Constants.PROJECT_TAG, convertStreamToString(httpPost.getEntity().getContent()));
+                        Log.d(Constants.PROJECT_TAG, convertStreamToString(httpPost.getEntity().getContent()));
 
-                    response[i++] = httpClient.execute(httpPost, localContext);
+                        response[i++] = httpClient.execute(httpPost, localContext);
 
-                } catch (IOException e) {
-                    Log.e(Constants.PROJECT_TAG, "IOException postImage", e);
-                } catch (IllegalStateException e) {
-                    Log.e(Constants.PROJECT_TAG, "IllegalStateException postImage", e);
-                } catch (AVServiceErrorException e) {
-                    Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in doInBackground", e);
+                    } catch (IOException e) {
+                        Log.e(Constants.PROJECT_TAG, "IOException postImage", e);
+                    } catch (IllegalStateException e) {
+                        Log.e(Constants.PROJECT_TAG, "IllegalStateException postImage", e);
+                    } catch (AVServiceErrorException e) {
+                        Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in doInBackground", e);
+                    }
                 }
             }
             return response;
@@ -248,29 +257,28 @@ public class AVService {
         @Override
         protected void onPostExecute(HttpResponse[] result) {
 
-            //error somewhere... asuming all went done
-            
-            
-//            try {
-//
-//                JSONArray jo = new JSONArray(convertStreamToString(result[0].getEntity().getContent()));
-//                int resultnum = jo.getJSONObject(0).getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS);
-//                Log.i(Constants.PROJECT_TAG, "AV Status:" + resultnum);
-//                if (resultnum != 0) throw new AVServiceErrorException(resultnum);
-//
-//            } catch (JSONException e) {
-//                Log.e(Constants.PROJECT_TAG, "JSONException in onPostExecute", e);
-//                toastServerError();
-//                listener.onRequestcompleted(REQUEST_ERROR, e);
-//            } catch (AVServiceErrorException e) {
-//                Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in onPostExecute", e);
-//                toastServerError();
-//                listener.onRequestcompleted(REQUEST_ERROR, e);
-//            } catch (IllegalStateException e) {
-//                Log.e(Constants.PROJECT_TAG, "IllegalStateException in onPostExecute", e);
-//            } catch (IOException e) {
-//                Log.e(Constants.PROJECT_TAG, "IOException in onPostExecute", e);
-//            }
+            // error somewhere... asuming all went done
+            listener.onRequestcompleted(REQUEST_IMAGE, null);
+            // try {
+            //
+            // JSONArray jo = new JSONArray(convertStreamToString(result[0].getEntity().getContent()));
+            // int resultnum = jo.getJSONObject(0).getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS);
+            // Log.i(Constants.PROJECT_TAG, "AV Status:" + resultnum);
+            // if (resultnum != 0) throw new AVServiceErrorException(resultnum);
+            //
+            // } catch (JSONException e) {
+            // Log.e(Constants.PROJECT_TAG, "JSONException in onPostExecute", e);
+            // toastServerError();
+            // listener.onRequestcompleted(REQUEST_ERROR, e);
+            // } catch (AVServiceErrorException e) {
+            // Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in onPostExecute", e);
+            // toastServerError();
+            // listener.onRequestcompleted(REQUEST_ERROR, e);
+            // } catch (IllegalStateException e) {
+            // Log.e(Constants.PROJECT_TAG, "IllegalStateException in onPostExecute", e);
+            // } catch (IOException e) {
+            // Log.e(Constants.PROJECT_TAG, "IOException in onPostExecute", e);
+            // }
 
             super.onPostExecute(result);
         }

@@ -50,6 +50,7 @@ import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.entities.JsonData;
+import com.fabernovel.alertevoirie.entities.Last_Location;
 import com.fabernovel.alertevoirie.utils.Utils;
 import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
@@ -61,6 +62,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     private static final int    REQUEST_POSITION            = 1;
     private static final int    REQUEST_COMMENT             = 2;
     private static final int    REQUEST_DETAILS             = 3;
+    private static final int    REQUEST_COMMENT_BEFORE_EXIT = 4;
+    private static final int    REQUEST_IMAGE_COMMENT       = 5;
 
     public static final String  CAPTURE_FAR                 = "capture_far.jpg";
     public static final String  CAPTURE_CLOSE               = "capture_close.jpg";
@@ -68,12 +71,11 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     private static final int    DIALOG_PROGRESS             = 0;
 
-    private static final int    REQUEST_COMMENT_BEFORE_EXIT = 4;
-
     private static final int    ACTION_SOLVE_INCIDENT       = 1;
     private static final int    ACTION_CONFIRM_INCIDENT     = 2;
-
     private static final int    ACTION_INVALID_INCIDENT     = 3;
+    private static final int    ACTION_ADD_IMAGE            = 4;
+    private static final int    ACTION_GET_IMAGES           = 5;
 
     private boolean             hasPic;
 
@@ -116,7 +118,9 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             findViewById(R.id.existing_incidents_layout).setVisibility(View.VISIBLE);
             try {
                 ImageDownloader imgd = new ImageDownloader(this);
-                currentIncident = Incident.fromJSONObject(this, new JSONObject(getIntent().getStringExtra("event")));
+                String jsonEvent = getIntent().getStringExtra("event");
+                Log.d("AlerteVoirie_PM", "json : " + jsonEvent);
+                currentIncident = Incident.fromJSONObject(this, new JSONObject(jsonEvent));
                 setCategory(currentIncident.categoryId);
                 ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
                 ((TextView) findViewById(R.id.TextView_address)).setText(currentIncident.address);
@@ -142,6 +146,12 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 if (currentIncident.pictures_close.length() > 0) {
                     imgd.download((String) currentIncident.pictures_close.get(0), ((ImageView) findViewById(R.id.ImageView_close)));
                 }
+
+                // launch the json request to load additional images
+                mCurrentAction = ACTION_GET_IMAGES;
+                JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_IMAGES).put(JsonData.PARAM_IMAGES_INCIDENT_ID,
+                                                                                                                         currentIncident.id);
+                AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
 
             } catch (JSONException e) {
                 Log.e(Constants.PROJECT_TAG, "JSONException in onCreate", e);
@@ -304,7 +314,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 new AlertDialog.Builder(this).setMessage(R.string.report_detail_confirm_question)
                                              .setCancelable(false)
                                              .setPositiveButton(R.string.oui, listener)
-                                             .setNegativeButton(R.string.non, listener).show();
+                                             .setNegativeButton(R.string.non, listener)
+                                             .show();
                 break;
             case R.id.existing_incidents_confirmed:
                 mCurrentAction = ACTION_CONFIRM_INCIDENT;
@@ -325,7 +336,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     @Override
                     public void onClick(View v) {
                         takePicture(0, R.id.existing_incidents_add_picture);
-                        finish();
+                        // finish();
+                        qa.dismiss();
                     }
                 });
 
@@ -335,8 +347,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     @Override
                     public void onClick(View v) {
                         takePicture(1, R.id.existing_incidents_add_picture);
-                        finish();
-
+                        // finish();
+                        qa.dismiss();
                     }
                 });
 
@@ -481,7 +493,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(Constants.PROJECT_TAG, "Result : " + requestCode);
+        Log.d("AlerteVoirie_PM", "Result : " + requestCode);
         switch (requestCode) {
             case R.id.existing_incidents_add_picture:
             case R.id.ImageView_far:
@@ -545,11 +557,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                 ((Button) findViewById(R.id.Button_validate)).setEnabled(true);
                             }
                         } else {
-
-                            showDialog(DIALOG_PROGRESS);
-                            File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
-
-                            AVService.getInstance(this).postImage(Utils.getUdid(this), null, Long.toString(currentIncident.id), null, img_close);
+                            Intent i = new Intent(getApplicationContext(), AddCommentActivity.class);
+                            startActivityForResult(i, REQUEST_IMAGE_COMMENT);
                         }
                         // }
 
@@ -603,6 +612,15 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     if (currentIncident.description != null) findViewById(R.id.TextView_nocomment).setVisibility(View.GONE);
                 }
                 break;
+            case REQUEST_IMAGE_COMMENT:
+                if (resultCode == RESULT_OK) {
+                    showDialog(DIALOG_PROGRESS);
+                    File img = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
+                    mCurrentAction = ACTION_ADD_IMAGE;
+                    AVService.getInstance(this).postImage(this, Utils.getUdid(this), data.getStringExtra(IntentData.EXTRA_COMMENT),
+                                                          Long.toString(currentIncident.id), img, null);
+                }
+                break;
             case REQUEST_COMMENT_BEFORE_EXIT:
                 if (resultCode == RESULT_OK) {
                     currentIncident.description = data.getStringExtra(IntentData.EXTRA_COMMENT);
@@ -613,10 +631,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             case REQUEST_DETAILS:
                 if (resultCode == RESULT_OK) {
                     // startActivityForResult(data, requestCode)
-                    
-                    //set new img
+
+                    // set new img
                     setPictureToImageView("arrowed.jpg", (ImageView) findViewById(R.id.ImageView_far));
-                    
+
                     loadComment(REQUEST_COMMENT);
                 }
                 break;
@@ -695,10 +713,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
             if (!hasPic) hasPic = (imageView.getId() == R.id.ImageView_far);
 
-            //WTF ?
-//            if (hasPic && (imageView.getId() == R.id.ImageView_far)) {
-//                loadZoom();
-//            }
+            // WTF ?
+            // if (hasPic && (imageView.getId() == R.id.ImageView_far)) {
+            // loadZoom();
+            // }
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -749,10 +767,16 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             // clear pd from memory to avoid progress bar freeze when showed again
             removeDialog(DIALOG_PROGRESS);
         }
+        Log.d(Constants.PROJECT_TAG, "Request result " + (String) result);
+        
+        
+        if (requestCode == AVService.REQUEST_IMAGE) {
+            new AlertDialog.Builder(this).setMessage(R.string.news_photo_added).setPositiveButton(android.R.string.ok, null).show();
+            return;
+        }
 
         if (requestCode == AVService.REQUEST_JSON && result != null) {
             try {
-                Log.d(Constants.PROJECT_TAG, "Request result" + (String) result);
                 JSONObject answer = new JSONArray((String) result).getJSONObject(0);
                 boolean isIncident = JsonData.VALUE_REQUEST_NEW_INCIDENT.equals(answer.getString(JsonData.PARAM_REQUEST));
                 boolean isOk = (JsonData.VALUE_INCIDENT_SAVED == (answer.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS)));
@@ -770,16 +794,23 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         img_far = new File(getFilesDir() + "/" + CAPTURE_FAR);
                     }
 
-                    AVService.getInstance(this).postImage(Utils.getUdid(this), img_comment,
+                    // TODO add a listener which handles commands properly
+                    AVService.getInstance(this).postImage(null, Utils.getUdid(this), img_comment,
                                                           answer.getJSONObject(JsonData.PARAM_ANSWER).getString(JsonData.ANSWER_INCIDENT_ID), img_far,
                                                           img_close);
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     AlertDialog alert;
-                    builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
+                    builder.setMessage(R.string.report_detail_new_report_ok)
+                           .setCancelable(false)
+                           .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                               @Override
+                               public void onClick(DialogInterface dialog, int which) {
+                                   finish();
+                               }
+                           });
                     alert = builder.create();
                     alert.show();
                 } else {
-                    Log.d("AlerteVoirie_PM", "answer : " + answer);
 
                     // hotfix nico : here we can have valid answer for incident updates !!!
                     // handle answer and display popup here instead of when we click on buttons
@@ -788,6 +819,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     if (statuscode == 0) {
                         // FIXME end activity when resolve incident ??
                         switch (mCurrentAction) {
+                            case ACTION_GET_IMAGES:
+                                //TODO TODO TODO display the images !!!
+                                Log.d("AlerteVoirie_PM", "images : " + result);
+                                break;
                             case ACTION_CONFIRM_INCIDENT:
                                 new AlertDialog.Builder(this).setMessage(R.string.news_incidents_confirmed).setPositiveButton(android.R.string.ok, null).show();
                                 break;
@@ -823,7 +858,6 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                 break;
                         }
                     } else {
-                        Log.d("AlerteVoirie_PM", "json de ouf : "+result);
                         // other things
                         // FIXME show popups instead of toasts !
                         if ((answer.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS)) == 18) {
