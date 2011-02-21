@@ -37,6 +37,8 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -91,6 +93,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     private int                 mCurrentAction;
 
+    private ImageDownloader     imgd;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,7 +121,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             findViewById(R.id.Button_validate).setVisibility(View.GONE);
             findViewById(R.id.existing_incidents_layout).setVisibility(View.VISIBLE);
             try {
-                ImageDownloader imgd = new ImageDownloader(this);
+                imgd = new ImageDownloader(this);
                 String jsonEvent = getIntent().getStringExtra("event");
                 Log.d("AlerteVoirie_PM", "json : " + jsonEvent);
                 currentIncident = Incident.fromJSONObject(this, new JSONObject(jsonEvent));
@@ -147,16 +151,13 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     imgd.download((String) currentIncident.pictures_close.get(0), ((ImageView) findViewById(R.id.ImageView_close)));
                 }
 
-                // launch the json request to load additional images
-                mCurrentAction = ACTION_GET_IMAGES;
-                JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_IMAGES).put(JsonData.PARAM_IMAGES_INCIDENT_ID,
-                                                                                                                         currentIncident.id);
-                AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
 
             } catch (JSONException e) {
                 Log.e(Constants.PROJECT_TAG, "JSONException in onCreate", e);
             }
 
+            // launch the json request to load additional images
+            requestAdditionalPhotos();
         } else {
             findViewById(R.id.ImageView_far).setOnClickListener(this);
             findViewById(R.id.ImageView_close).setOnClickListener(this);
@@ -170,6 +171,18 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         if (getIntent().getLongExtra(IntentData.EXTRA_CATEGORY_ID, -1) != -1) {
             setCategory(getIntent().getLongExtra(IntentData.EXTRA_CATEGORY_ID, 0));
             startActivityForResult(new Intent(this, SelectPositionActivity.class), REQUEST_POSITION);
+        }
+    }
+
+    private void requestAdditionalPhotos() {
+        try {
+            mCurrentAction = ACTION_GET_IMAGES;
+            JSONObject request;
+            request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_IMAGES)
+                                      .put(JsonData.PARAM_IMAGES_INCIDENT_ID, currentIncident.id);
+            AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
@@ -768,10 +781,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             removeDialog(DIALOG_PROGRESS);
         }
         Log.d(Constants.PROJECT_TAG, "Request result " + (String) result);
-        
-        
+
         if (requestCode == AVService.REQUEST_IMAGE) {
             new AlertDialog.Builder(this).setMessage(R.string.news_photo_added).setPositiveButton(android.R.string.ok, null).show();
+            requestAdditionalPhotos();
             return;
         }
 
@@ -820,8 +833,29 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         // FIXME end activity when resolve incident ??
                         switch (mCurrentAction) {
                             case ACTION_GET_IMAGES:
-                                //TODO TODO TODO display the images !!!
+                                // TODO TODO TODO display the images !!!
                                 Log.d("AlerteVoirie_PM", "images : " + result);
+                                JSONArray imgList = answer.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_PHOTOS);
+                                ViewGroup photocontainer = (ViewGroup) findViewById(R.id.extra_images_container);
+                                photocontainer.removeAllViews();
+                                LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+                                for (int i = 0; i < imgList.length() - 2; i++) {
+                                    JSONObject imgObj = imgList.getJSONObject(i);
+                                    View v = getLayoutInflater().inflate(R.layout.extra_photo, null);
+                                    v.setLayoutParams(params);
+                                    TextView date = (TextView) v.findViewById(R.id.textView_date);
+                                    TextView comment = (TextView) v.findViewById(R.id.textView_comment);
+                                    ImageView icon = (ImageView) v.findViewById(R.id.imageView_icon);
+                                    date.setText(imgObj.getString(JsonData.PARAM_IMAGES_DATE));
+                                    comment.setText(imgObj.getString(JsonData.PARAM_IMAGES_COMMENT));
+                                    imgd.download(imgObj.getString(JsonData.PARAM_IMAGES_URL), icon);
+                                    photocontainer.addView(v);
+                                }
+                                if (imgList.length() > 2) {
+                                    findViewById(R.id.TextView_additional_photos_header).setVisibility(View.VISIBLE);
+                                } else {
+                                    findViewById(R.id.TextView_additional_photos_header).setVisibility(View.GONE);
+                                }
                                 break;
                             case ACTION_CONFIRM_INCIDENT:
                                 new AlertDialog.Builder(this).setMessage(R.string.news_incidents_confirmed).setPositiveButton(android.R.string.ok, null).show();

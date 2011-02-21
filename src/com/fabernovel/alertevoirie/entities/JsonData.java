@@ -61,4 +61,8 @@ public interface JsonData {
     String PARAM_INCIDENT_LOG                      = "incidentLog";
 
     String PARAM_IMAGES_INCIDENT_ID                = "incidentId";
+    String PARAM_PHOTOS                            = "photos";
+    String PARAM_IMAGES_DATE                       = "date";
+    String PARAM_IMAGES_COMMENT                    = "commentary";
+    String PARAM_IMAGES_URL                        = "photo_url";
 }
