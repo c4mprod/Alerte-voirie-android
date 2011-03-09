@@ -7,6 +7,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.FileNameMap;
 import java.net.URLConnection;
+import java.text.FieldPosition;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import net.londatiga.android.ActionItem;
 import net.londatiga.android.QuickAction;
@@ -34,6 +40,7 @@ import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -52,7 +59,6 @@ import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.entities.JsonData;
-import com.fabernovel.alertevoirie.entities.Last_Location;
 import com.fabernovel.alertevoirie.utils.Utils;
 import com.fabernovel.alertevoirie.webservice.AVService;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
@@ -107,7 +113,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         getWindow().setTitle(getString(R.string.report_detail_new_report_title));
 
         findViewById(R.id.LinearLayout_comment).setVisibility(View.GONE);
-        ((Button) findViewById(R.id.Button_validate)).setEnabled(false);
+        Button validate = (Button) findViewById(R.id.Button_validate);
 
         File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
         File img_far = new File(getFilesDir() + "/" + CAPTURE_ARROW);
@@ -118,7 +124,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         img_far2.delete();
 
         if (getIntent().getBooleanExtra("existing", false)) {
-            findViewById(R.id.Button_validate).setVisibility(View.GONE);
+            validate.setVisibility(View.GONE);
+            validate.setEnabled(true);
             findViewById(R.id.existing_incidents_layout).setVisibility(View.VISIBLE);
             try {
                 imgd = new ImageDownloader(this);
@@ -151,7 +158,6 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     imgd.download((String) currentIncident.pictures_close.get(0), ((ImageView) findViewById(R.id.ImageView_close)));
                 }
 
-
             } catch (JSONException e) {
                 Log.e(Constants.PROJECT_TAG, "JSONException in onCreate", e);
             }
@@ -159,14 +165,15 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             // launch the json request to load additional images
             requestAdditionalPhotos();
         } else {
-            findViewById(R.id.ImageView_far).setOnClickListener(this);
-            findViewById(R.id.ImageView_close).setOnClickListener(this);
-            findViewById(R.id.LinearLayout_category).setOnClickListener(this);
-            findViewById(R.id.LinearLayout_where).setOnClickListener(this);
-            findViewById(R.id.LinearLayout_comment).setOnClickListener(this);
-            findViewById(R.id.Button_validate).setOnClickListener(this);
+            validate.setEnabled(false);
         }
         // init buttons
+        findViewById(R.id.ImageView_far).setOnClickListener(this);
+        findViewById(R.id.ImageView_close).setOnClickListener(this);
+        findViewById(R.id.LinearLayout_category).setOnClickListener(this);
+        findViewById(R.id.LinearLayout_where).setOnClickListener(this);
+        findViewById(R.id.LinearLayout_comment).setOnClickListener(this);
+        validate.setOnClickListener(this);
 
         if (getIntent().getLongExtra(IntentData.EXTRA_CATEGORY_ID, -1) != -1) {
             setCategory(getIntent().getLongExtra(IntentData.EXTRA_CATEGORY_ID, 0));
@@ -604,7 +611,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             case REQUEST_CATEGORY:
                 if (resultCode == RESULT_OK) {
                     setCategory(data.getLongExtra(IntentData.EXTRA_CATEGORY_ID, -1));
-
+                    // TODO do this when update request ready
+                    // findViewById(R.id.Button_validate).setVisibility(View.VISIBLE);
                 }
                 break;
             case REQUEST_POSITION:
@@ -616,6 +624,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     if (currentIncident.address != null && currentIncident.address.length() > 0 && canvalidate) {
                         ((Button) findViewById(R.id.Button_validate)).setEnabled(true);
                     }
+                    // findViewById(R.id.Button_validate).setVisibility(View.VISIBLE);
                 }
                 break;
             case REQUEST_COMMENT:
@@ -623,6 +632,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     currentIncident.description = data.getStringExtra(IntentData.EXTRA_COMMENT);
                     ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
                     if (currentIncident.description != null) findViewById(R.id.TextView_nocomment).setVisibility(View.GONE);
+                    // findViewById(R.id.Button_validate).setVisibility(View.VISIBLE);
                 }
                 break;
             case REQUEST_IMAGE_COMMENT:
@@ -833,7 +843,6 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         // FIXME end activity when resolve incident ??
                         switch (mCurrentAction) {
                             case ACTION_GET_IMAGES:
-                                // TODO TODO TODO display the images !!!
                                 Log.d("AlerteVoirie_PM", "images : " + result);
                                 JSONArray imgList = answer.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_PHOTOS);
                                 ViewGroup photocontainer = (ViewGroup) findViewById(R.id.extra_images_container);
@@ -846,7 +855,17 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                     TextView date = (TextView) v.findViewById(R.id.textView_date);
                                     TextView comment = (TextView) v.findViewById(R.id.textView_comment);
                                     ImageView icon = (ImageView) v.findViewById(R.id.imageView_icon);
-                                    date.setText(imgObj.getString(JsonData.PARAM_IMAGES_DATE));
+                                    
+                                    //format date
+                                    String dateString = imgObj.getString(JsonData.PARAM_IMAGES_DATE);
+                                    SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                    SimpleDateFormat formatter = new SimpleDateFormat("EEEE dd MMMM - HH:mm",Locale.FRENCH);
+                                    try {
+                                        date.setText(formatter.format(parser.parse(dateString)));
+                                    } catch (ParseException e) {
+                                        e.printStackTrace();
+                                    }
+                                    
                                     comment.setText(imgObj.getString(JsonData.PARAM_IMAGES_COMMENT));
                                     imgd.download(imgObj.getString(JsonData.PARAM_IMAGES_URL), icon);
                                     photocontainer.addView(v);

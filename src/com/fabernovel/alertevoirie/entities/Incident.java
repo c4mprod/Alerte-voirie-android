@@ -56,6 +56,18 @@ public class Incident extends OverlayItem {
             return null;
         }
     }
+    
+    public JSONObject getChangeIncidentRequest(Context c) {
+        try {
+            return new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_CHANGE_INCIDENT)
+            .put(JsonData.PARAM_IMAGES_INCIDENT_ID, id)
+            .put(JsonData.PARAM_INCIDENT_CATEGORY, categoryId)
+            .put(JsonData.PARAM_INCIDENT_ADDRESS, address);
+        } catch (JSONException e) {
+            Log.e(Constants.PROJECT_TAG, "Error creating new incident", e);
+            return null;
+        }
+    }
 
     public JSONObject updateIncidentRequest(Context c, String status) {
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<string name="report_details_additional_photo">"Photos supplémentaires"</string>
+<string name="report_details_additional_photo">"Mises à jour"</string>
 <string name="report_details_where">"Où ?"</string>
 <string name="report_details_far">"Vue d'ensemble"</string>
 <string name="report_details_close">"Vue de près"</string>

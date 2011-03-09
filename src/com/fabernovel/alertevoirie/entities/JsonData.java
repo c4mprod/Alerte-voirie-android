@@ -65,4 +65,5 @@ public interface JsonData {
     String PARAM_IMAGES_DATE                       = "date";
     String PARAM_IMAGES_COMMENT                    = "commentary";
     String PARAM_IMAGES_URL                        = "photo_url";
+    String VALUE_REQUEST_CHANGE_INCIDENT = "changeIncident";
 }

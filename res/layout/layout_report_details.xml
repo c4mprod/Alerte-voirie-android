@@ -190,10 +190,12 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="@string/report_details_additional_photo"
-            android:textAppearance="@style/TextBlueTitle"
+            android:textAppearance="@style/TextWhiteTitle"
+            android:textSize="14sp"
+            android:background="@drawable/hd"
             android:layout_marginTop="10dip"
-            android:layout_marginLeft="10dip"
-            android:layout_marginRight="10dip" />
+            android:paddingLeft="10dip"
+            android:paddingRight="10dip" />
         <LinearLayout
             android:id="@+id/extra_images_container"
             android:layout_width="fill_parent"
