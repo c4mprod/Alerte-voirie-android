@@ -7,11 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.FileNameMap;
 import java.net.URLConnection;
-import java.text.FieldPosition;
 import java.text.ParseException;
-import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 
 import net.londatiga.android.ActionItem;
@@ -40,7 +37,6 @@ import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -133,7 +129,16 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 Log.d("AlerteVoirie_PM", "json : " + jsonEvent);
                 currentIncident = Incident.fromJSONObject(this, new JSONObject(jsonEvent));
                 setCategory(currentIncident.categoryId);
-                ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
+
+                // NO, use title instead as comment is not editable
+                // ((TextView) findViewById(R.id.TextView_comment)).setText(currentIncident.description);
+                // load title
+                findViewById(R.id.LinearLayout_title).setVisibility(View.VISIBLE);
+                ((TextView) findViewById(R.id.TextView_title)).setText(currentIncident.description);
+                ((TextView) findViewById(R.id.TextView_date)).setText(getFormatedDate(currentIncident.date));
+                // hide comment edit buttons
+                findViewById(R.id.LinearLayout_comment).setVisibility(View.GONE);
+
                 ((TextView) findViewById(R.id.TextView_address)).setText(currentIncident.address);
                 // imgd.setDefault_img(((ImageView) findViewById(R.id.ImageView_far)).getBackground());
 
@@ -142,10 +147,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 findViewById(R.id.existing_incidents_add_picture).setOnClickListener(this);
                 findViewById(R.id.existing_incidents_invalid).setOnClickListener(this);
 
-                if (currentIncident.description != null && currentIncident.description.length() > 0) {
-                    findViewById(R.id.TextView_nocomment).setVisibility(View.GONE);
-                    findViewById(R.id.LinearLayout_comment).setVisibility(View.VISIBLE);
-                }
+                // if (currentIncident.description != null && currentIncident.description.length() > 0) {
+                // findViewById(R.id.TextView_nocomment).setVisibility(View.GONE);
+                // findViewById(R.id.LinearLayout_comment).setVisibility(View.VISIBLE);
+                // }
 
                 if (currentIncident.confirms > 1) {
                     ((TextView) findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms + " personnes confirment cet incident");
@@ -166,13 +171,15 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             requestAdditionalPhotos();
         } else {
             validate.setEnabled(false);
+            findViewById(R.id.LinearLayout_comment).setOnClickListener(this);
         }
+
         // init buttons
         findViewById(R.id.ImageView_far).setOnClickListener(this);
         findViewById(R.id.ImageView_close).setOnClickListener(this);
         findViewById(R.id.LinearLayout_category).setOnClickListener(this);
         findViewById(R.id.LinearLayout_where).setOnClickListener(this);
-        findViewById(R.id.LinearLayout_comment).setOnClickListener(this);
+
         validate.setOnClickListener(this);
 
         if (getIntent().getLongExtra(IntentData.EXTRA_CATEGORY_ID, -1) != -1) {
@@ -326,7 +333,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (which == Dialog.BUTTON_POSITIVE) {
-                            UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_RESOLVED);
+                            updateIncident(JsonData.PARAM_UPDATE_INCIDENT_RESOLVED);
                         }
                         dialog.dismiss();
                     }
@@ -339,7 +346,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 break;
             case R.id.existing_incidents_confirmed:
                 mCurrentAction = ACTION_CONFIRM_INCIDENT;
-                UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_CONFIRMED);
+                updateIncident(JsonData.PARAM_UPDATE_INCIDENT_CONFIRMED);
                 // Nico : show this after request is complete !
                 // builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
                 // alert = builder.create();
@@ -380,15 +387,18 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
                 break;
             case R.id.existing_incidents_invalid:
-                UpdateIncident(JsonData.PARAM_UPDATE_INCIDENT_INVALID);
+                updateIncident(JsonData.PARAM_UPDATE_INCIDENT_INVALID);
                 mCurrentAction = ACTION_INVALID_INCIDENT;
                 // builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
                 // alert = builder.create();
                 // alert.show();
                 break;
             case R.id.Button_validate:
-
-                loadComment(REQUEST_COMMENT_BEFORE_EXIT);
+                if (getIntent().getBooleanExtra("existing", false)) {
+                    changeIncident();
+                } else {
+                    loadComment(REQUEST_COMMENT_BEFORE_EXIT);
+                }
                 //$FALL-THROUGH$
             default:
                 break;
@@ -612,7 +622,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 if (resultCode == RESULT_OK) {
                     setCategory(data.getLongExtra(IntentData.EXTRA_CATEGORY_ID, -1));
                     // TODO do this when update request ready
-                    // findViewById(R.id.Button_validate).setVisibility(View.VISIBLE);
+                    findViewById(R.id.Button_validate).setVisibility(View.VISIBLE);
                 }
                 break;
             case REQUEST_POSITION:
@@ -624,7 +634,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     if (currentIncident.address != null && currentIncident.address.length() > 0 && canvalidate) {
                         ((Button) findViewById(R.id.Button_validate)).setEnabled(true);
                     }
-                    // findViewById(R.id.Button_validate).setVisibility(View.VISIBLE);
+                    findViewById(R.id.Button_validate).setVisibility(View.VISIBLE);
                 }
                 break;
             case REQUEST_COMMENT:
@@ -773,8 +783,19 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         }
     }
 
-    private void UpdateIncident(String Status) {
-        JSONObject newIncidentRequest = currentIncident.updateIncidentRequest(this, Status);
+    private void changeIncident() {
+        JSONObject changeIncidentRequest = currentIncident.getChangeIncidentRequest(this);
+
+        if (changeIncidentRequest != null) {
+            AVService.getInstance(this).postJSON(new JSONArray().put(changeIncidentRequest), this);
+            showDialog(DIALOG_PROGRESS);
+        } else {
+            // TODO handle event
+        }
+    }
+
+    private void updateIncident(String Status) {
+        JSONObject newIncidentRequest = currentIncident.getUpdateIncidentRequest(this, Status);
 
         if (newIncidentRequest != null) {
             AVService.getInstance(this).postJSON(new JSONArray().put(newIncidentRequest), this);
@@ -855,17 +876,11 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                     TextView date = (TextView) v.findViewById(R.id.textView_date);
                                     TextView comment = (TextView) v.findViewById(R.id.textView_comment);
                                     ImageView icon = (ImageView) v.findViewById(R.id.imageView_icon);
-                                    
-                                    //format date
+
+                                    // format date
                                     String dateString = imgObj.getString(JsonData.PARAM_IMAGES_DATE);
-                                    SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                                    SimpleDateFormat formatter = new SimpleDateFormat("EEEE dd MMMM - HH:mm",Locale.FRENCH);
-                                    try {
-                                        date.setText(formatter.format(parser.parse(dateString)));
-                                    } catch (ParseException e) {
-                                        e.printStackTrace();
-                                    }
-                                    
+                                    date.setText(getFormatedDate(dateString));
+
                                     comment.setText(imgObj.getString(JsonData.PARAM_IMAGES_COMMENT));
                                     imgd.download(imgObj.getString(JsonData.PARAM_IMAGES_URL), icon);
                                     photocontainer.addView(v);
@@ -932,6 +947,18 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
         }
 
+    }
+
+    private String getFormatedDate(String dateString) {
+        // format date
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat formatter = new SimpleDateFormat("EEEE dd MMMM - HH:mm", Locale.FRENCH);
+        try {
+            return formatter.format(parser.parse(dateString));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return dateString;
     }
 
     @Override

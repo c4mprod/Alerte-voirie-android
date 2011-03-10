@@ -61,6 +61,7 @@ public class Incident extends OverlayItem {
         try {
             return new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_CHANGE_INCIDENT)
             .put(JsonData.PARAM_IMAGES_INCIDENT_ID, id)
+            .put(JsonData.PARAM_UDID, c != null ? Utils.getUdid(c) : "0000")
             .put(JsonData.PARAM_INCIDENT_CATEGORY, categoryId)
             .put(JsonData.PARAM_INCIDENT_ADDRESS, address);
         } catch (JSONException e) {
@@ -69,7 +70,7 @@ public class Incident extends OverlayItem {
         }
     }
 
-    public JSONObject updateIncidentRequest(Context c, String status) {
+    public JSONObject getUpdateIncidentRequest(Context c, String status) {
 
         if (Constants.DEBUGMODE) Log.d(Constants.PROJECT_TAG, "updateIncidentRequest : ");
         try {

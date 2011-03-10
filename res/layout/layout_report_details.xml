@@ -39,6 +39,7 @@
                 android:text="@string/add_comment_nocomment"
                 android:textColor="#F00" />
             <ImageView
+                android:id="@+id/Button_edit"
                 android:src="@drawable/btn_edit"
                 android:scaleType="center"
                 android:duplicateParentState="true"
@@ -53,7 +54,8 @@
             android:layout_width="fill_parent"
             android:paddingLeft="@dimen/ui_padding_left"
             android:layout_marginBottom="@dimen/ui_spacing_vertical"
-            android:visibility="gone">
+            android:visibility="gone"
+            android:orientation="vertical">
             <TextView
                 android:layout_height="wrap_content"
                 android:id="@+id/TextView_title"

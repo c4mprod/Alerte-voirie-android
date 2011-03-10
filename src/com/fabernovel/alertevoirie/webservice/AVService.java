@@ -29,15 +29,15 @@ import com.fabernovel.alertevoirie.R;
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.JsonData;
 
-@SuppressWarnings("unused")
 public class AVService {
     public static final int     REQUEST_ERROR  = 0;
     public static final int     REQUEST_JSON   = 1;
-    public static final int    REQUEST_IMAGE = 2;
-
+    public static final int     REQUEST_IMAGE  = 2;
 
     private static final String AV_URL_PREPROD = "http://alerte-voirie.ppd.c4mprod.com/api/";
+    @SuppressWarnings("unused")
     private static final String AV_URL_PROD    = "http://www.alertevoirie.com/api/";
+    @SuppressWarnings("unused")
     private static final String URL_TEST       = "http://test.dev.playtomo.com/tools/testpost.php";
 
     private static final String AV_URL         = AV_URL_PREPROD;
@@ -90,6 +90,7 @@ public class AVService {
 
         @Override
         protected void onPostExecute(String result) {
+            Log.d("AlerteVoirie_PM", "Request response : "+result);
             if (exception == null) {
                 try {
                     JSONArray jo = new JSONArray(result);
@@ -192,7 +193,6 @@ public class AVService {
     }
 
     private class postImage extends AsyncTask<ArrayList<Object>, Integer, HttpResponse[]> {
-
 
         @Override
         protected HttpResponse[] doInBackground(ArrayList<Object>... params) {
