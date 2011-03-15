@@ -7,4 +7,5 @@ public interface Constants {
     public static final String  NEW_REPORT             = "NewReport";
     public static final String  SDCARD_PATH            = "/Android/data/" + RESOURCES_PACKAGE;
     public static final boolean DEBUGMODE              = true;
+    public static final long    TIMEOUT                = 20000;
 }

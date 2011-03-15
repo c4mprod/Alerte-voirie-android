@@ -18,7 +18,7 @@
 				android:layout_width="fill_parent"
 				android:orientation="horizontal">
 				<RadioButton
-						android:text="N/A"
+						android:text="0"
 						android:id="@+id/Tab_ongoing"
 						android:layout_width="107dip"
 						android:layout_height="wrap_content"
@@ -26,14 +26,14 @@
 						android:checked="true"
 						style="@style/Tab" />
 				<RadioButton
-						android:text="N/A"
+						android:text="0"
 						android:id="@+id/Tab_updated"
 						android:layout_width="107dip"
 						android:layout_height="wrap_content"
 						android:bufferType="spannable"
 						style="@style/Tab" />
 				<RadioButton
-						android:text="N/A"
+						android:text="0"
 						android:id="@+id/Tab_resolved"
 						android:layout_width="106dip"
 						android:layout_height="wrap_content"

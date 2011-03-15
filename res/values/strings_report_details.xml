@@ -11,4 +11,8 @@
 <string name="report_detail_new_report_ok">Votre rapport a été envoyé</string>
 <string name="report_detail_update_ok">Ce rapport a été mis à jour</string>
 <string name="report_detail_confirm_question">Cet incident a-t-il été résolu ?</string>
+<string name="invalidate_popup_title">Invalider cet incident</string>
+<string name="invalidate_popup_message">"L'incident sera supprimé"</string>
+<string name="timeout_popup_title">Erreur</string>
+<string name="timeout_popup_message">Une erreur de connection est survenue. Veuillez réessayer plus tard.</string>
 </resources>

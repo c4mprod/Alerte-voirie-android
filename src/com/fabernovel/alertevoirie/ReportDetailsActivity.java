@@ -36,6 +36,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -74,6 +75,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     public static final String  CAPTURE_ARROW               = "arrowed.jpg";
 
     private static final int    DIALOG_PROGRESS             = 0;
+    private static final int    DIALOG_TIMEOUT              = 1;
 
     private static final int    ACTION_SOLVE_INCIDENT       = 1;
     private static final int    ACTION_CONFIRM_INCIDENT     = 2;
@@ -96,6 +98,18 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     private int                 mCurrentAction;
 
     private ImageDownloader     imgd;
+
+    private static final long   TIMEOUT                     = Constants.TIMEOUT;
+    private final Runnable      timeout                     = new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    if (mPd != null) {
+                                                                        mPd.dismiss();
+                                                                    }
+                                                                    showDialog(DIALOG_TIMEOUT);
+                                                                }
+                                                            };
+    private Handler             timeoutHandler              = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,6 +208,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             JSONObject request;
             request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_IMAGES)
                                       .put(JsonData.PARAM_IMAGES_INCIDENT_ID, currentIncident.id);
+            timeoutHandler.postDelayed(timeout, TIMEOUT);
             AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -387,11 +402,17 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
                 break;
             case R.id.existing_incidents_invalid:
-                updateIncident(JsonData.PARAM_UPDATE_INCIDENT_INVALID);
-                mCurrentAction = ACTION_INVALID_INCIDENT;
-                // builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
-                // alert = builder.create();
-                // alert.show();
+                new AlertDialog.Builder(this).setTitle(R.string.invalidate_popup_title)
+                                             .setMessage(R.string.invalidate_popup_message)
+                                             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                                 @Override
+                                                 public void onClick(DialogInterface dialog, int which) {
+                                                     updateIncident(JsonData.PARAM_UPDATE_INCIDENT_INVALID);
+                                                     mCurrentAction = ACTION_INVALID_INCIDENT;
+                                                 }
+                                             })
+                                             .setNegativeButton(android.R.string.cancel, null)
+                                             .show();
                 break;
             case R.id.Button_validate:
                 if (getIntent().getBooleanExtra("existing", false)) {
@@ -650,6 +671,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     showDialog(DIALOG_PROGRESS);
                     File img = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
                     mCurrentAction = ACTION_ADD_IMAGE;
+                    timeoutHandler.postDelayed(timeout, TIMEOUT);
                     AVService.getInstance(this).postImage(this, Utils.getUdid(this), data.getStringExtra(IntentData.EXTRA_COMMENT),
                                                           Long.toString(currentIncident.id), img, null);
                 }
@@ -776,6 +798,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         JSONObject newIncidentRequest = currentIncident.getNewIncidentRequest(this);
 
         if (newIncidentRequest != null) {
+            timeoutHandler.postDelayed(timeout, TIMEOUT);
             AVService.getInstance(this).postJSON(new JSONArray().put(newIncidentRequest), this);
             showDialog(DIALOG_PROGRESS);
         } else {
@@ -787,6 +810,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         JSONObject changeIncidentRequest = currentIncident.getChangeIncidentRequest(this);
 
         if (changeIncidentRequest != null) {
+            timeoutHandler.postDelayed(timeout, TIMEOUT);
             AVService.getInstance(this).postJSON(new JSONArray().put(changeIncidentRequest), this);
             showDialog(DIALOG_PROGRESS);
         } else {
@@ -798,6 +822,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         JSONObject newIncidentRequest = currentIncident.getUpdateIncidentRequest(this, Status);
 
         if (newIncidentRequest != null) {
+            timeoutHandler.postDelayed(timeout, TIMEOUT);
             AVService.getInstance(this).postJSON(new JSONArray().put(newIncidentRequest), this);
             showDialog(DIALOG_PROGRESS);
         } else {
@@ -807,6 +832,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
     @Override
     public void onRequestcompleted(int requestCode, Object result) {
+        timeoutHandler.removeCallbacks(timeout);
         if (mPd != null && mPd.isShowing()) {
             // clear pd from memory to avoid progress bar freeze when showed again
             removeDialog(DIALOG_PROGRESS);
@@ -983,6 +1009,17 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 });
                 mPd.setMessage(getString(R.string.ui_message_loading));
                 return mPd;
+
+            case DIALOG_TIMEOUT:
+                return new AlertDialog.Builder(getApplicationContext()).setTitle(R.string.timeout_popup_title)
+                                                                       .setMessage(R.string.timeout_popup_message)
+                                                                       .setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                                                           @Override
+                                                                           public void onClick(DialogInterface dialog, int which) {
+                                                                               finish();
+                                                                           }
+                                                                       })
+                                                                       .create();
 
             default:
                 return super.onCreateDialog(id);

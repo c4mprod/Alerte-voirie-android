@@ -1,30 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-		xmlns:android="http://schemas.android.com/apk/res/android"
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-		android:background="@drawable/page_mes_rapports_et_autour_de_vous_cadre_blanc"
-		android:orientation="horizontal">
-		<AbsoluteLayout android:id="@+id/AbsoluteLayout01" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginRight="10dip"><ImageView android:id="@+id/ImageView_icon" android:layout_height="wrap_content" android:layout_width="100dip" android:layout_gravity="top|left" android:layout_marginRight="30dip" android:adjustViewBounds="true" android:src="@drawable/default_image"/><ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/ImageView_icn" android:src="@drawable/icn_incident_resolu2" android:layout_x="5dip" android:layout_y="5dip"></ImageView>
-</AbsoluteLayout>
-		<RelativeLayout
-				android:id="@+id/RelativeLayout01"
-				android:layout_weight="1" android:layout_width="fill_parent" android:layout_height="wrap_content">
-				<TextView
-						android:id="@+id/TextView_title"
-						android:layout_height="wrap_content"
-						android:layout_width="fill_parent"
-						android:textAppearance="@style/TextBlueTitle" android:ellipsize="end" android:lines="2"/>
-				<TextView
-						android:id="@+id/TextView_text"
-						android:layout_below="@+id/TextView_title"
-						android:layout_height="wrap_content"
-						android:layout_width="fill_parent"/>
-		
-<TextView android:textStyle="bold" android:layout_width="wrap_content" android:id="@+id/TextView_distance" android:layout_height="wrap_content" android:text="@string/address_distance" android:layout_alignParentBottom="true" android:layout_marginBottom="5dip" android:layout_below="@+id/TextView_text" android:gravity="bottom" android:visibility="gone"></TextView>
-</RelativeLayout>
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/page_mes_rapports_et_autour_de_vous_cadre_blanc"
+    android:orientation="horizontal">
+    <FrameLayout
+        android:id="@+id/AbsoluteLayout01"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dip">
+        <ImageView
+            android:id="@+id/ImageView_icon"
+            android:layout_height="wrap_content"
+            android:layout_width="100dip"
+            android:layout_gravity="top|left"
+            android:layout_marginRight="30dip"
+            android:adjustViewBounds="true"
+            android:src="@drawable/default_image" />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ImageView_icn"
+            android:src="@drawable/icn_incident_resolu2"
+            android:layout_marginLeft="5dip"
+            android:layout_marginTop="5dip"></ImageView>
+    </FrameLayout>
+    <RelativeLayout
+        android:id="@+id/RelativeLayout01"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/TextView_title"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:textAppearance="@style/TextBlueTitle"
+            android:ellipsize="end"
+            android:lines="2" />
+        <TextView
+            android:id="@+id/TextView_text"
+            android:layout_below="@+id/TextView_title"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent" />
+
+        <TextView
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:id="@+id/TextView_distance"
+            android:layout_height="wrap_content"
+            android:text="@string/address_distance"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="5dip"
+            android:layout_below="@+id/TextView_text"
+            android:gravity="bottom"
+            android:visibility="gone"></TextView>
+    </RelativeLayout>
 
 
 
-<ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/bouton_arrow" android:layout_gravity="center_vertical" android:id="@+id/Arrow_details" android:layout_marginLeft="10dip"></ImageView>
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/bouton_arrow"
+        android:layout_gravity="center_vertical"
+        android:id="@+id/Arrow_details"
+        android:layout_marginLeft="10dip"></ImageView>
 </LinearLayout>

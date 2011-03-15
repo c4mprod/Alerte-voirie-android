@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -14,12 +15,15 @@ import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.ListView;
@@ -45,6 +49,30 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
     ToggleButton                 tbmap;
     RadioGroup                   tabs;
     protected int                checked;
+
+    private ProgressDialog       mPd;
+    private static final long    TIMEOUT         = Constants.TIMEOUT;
+    private final Runnable       timeout         = new Runnable() {
+
+                                                     @Override
+                                                     public void run() {
+                                                         if (mPd != null) {
+                                                             mPd.dismiss();
+                                                             new AlertDialog.Builder(getApplicationContext()).setTitle(R.string.timeout_popup_title)
+                                                                                                             .setMessage(R.string.timeout_popup_message)
+                                                                                                             .setNegativeButton(android.R.string.ok,
+                                                                                                                                new DialogInterface.OnClickListener() {
+                                                                                                                                    @Override
+                                                                                                                                    public void onClick(DialogInterface dialog,
+                                                                                                                                                        int which) {
+                                                                                                                                        finish();
+                                                                                                                                    }
+                                                                                                                                })
+                                                                                                             .show();
+                                                         }
+                                                     }
+                                                 };
+    private Handler              timeoutHandler  = new Handler();
 
     /** Called when the activity is first created. */
     @Override
@@ -102,6 +130,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
 
             // launch request
             try {
+                timeoutHandler.postDelayed(timeout, TIMEOUT);
                 AVService.getInstance(this).postJSON(new JSONArray().put(new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_MY_INCIDENTS)
                                                                                          .put(JsonData.PARAM_UDID, Utils.getUdid(this))), this);
                 showDialog(DIALOG_PROGRESS);
@@ -141,6 +170,8 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
     @Override
     public void onRequestcompleted(int requestCode, Object result) {
         Log.d(Constants.PROJECT_TAG, "result = " + result);
+        timeoutHandler.removeCallbacks(timeout);
+        
         if (requestCode == AVService.REQUEST_JSON && result != null) {
             try {
                 JSONObject answer = new JSONArray((String) result).getJSONObject(0);
@@ -196,7 +227,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
             } catch (JSONException e) {
                 Log.e(Constants.PROJECT_TAG, "JsonException in onRequestCompleted", e);
             } finally {
-                dismissDialog(DIALOG_PROGRESS);
+                mPd.dismiss();
             }
         }
 
@@ -231,24 +262,24 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
     protected Dialog onCreateDialog(int id) {
         switch (id) {
             case DIALOG_PROGRESS:
-                ProgressDialog pd = new ProgressDialog(this);
-                pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                pd.setIndeterminate(true);
-                pd.setOnDismissListener(new OnDismissListener() {
+                mPd = new ProgressDialog(this);
+                mPd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                mPd.setIndeterminate(true);
+                mPd.setOnDismissListener(new OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         removeDialog(DIALOG_PROGRESS);
                     }
                 });
-                pd.setOnCancelListener(new OnCancelListener() {
+                mPd.setOnCancelListener(new OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
                         AVService.getInstance(MyIncidentsActivity.this).cancelTask();
                         finish();
                     }
                 });
-                pd.setMessage(getString(R.string.ui_message_loading));
-                return pd;
+                mPd.setMessage(getString(R.string.ui_message_loading));
+                return mPd;
 
             default:
                 return super.onCreateDialog(id);
@@ -266,7 +297,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
         }
     }
 
-    private void setAdapterForTab(int tab) {
+    private void setAdapterForTab(final int tab) {
 
         try {
             // Log.d(Constants.PROJECT_TAG, data.getJSONArray(INCIDENTS[tab]).toString());
@@ -284,6 +315,25 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
                                                        new Date(Integer.parseInt(date.substring(0, 4)), Integer.parseInt(date.substring(5, 7)) - 1,
                                                                 Integer.parseInt(date.substring(8, 10))))).replace("39", "20");
                     // return date;
+                }
+
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    View v = super.getView(position, convertView, parent);
+                    if (getItemViewType(position) == TYPE_ITEM) {
+                        View arrow = v.findViewById(R.id.Arrow_details);
+                        if (isEnabled(position)) {
+                            arrow.setVisibility(View.VISIBLE);
+                        } else {
+                            arrow.setVisibility(View.GONE);
+                        }
+                    }
+                    return v;
+                }
+
+                @Override
+                public boolean isEnabled(int position) {
+                    return tab != 2;
                 }
             });
         } catch (Exception e) {

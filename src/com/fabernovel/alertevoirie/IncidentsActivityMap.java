@@ -130,7 +130,6 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
     }
 
     protected void setMapForTab(int gettabIndex) {
-
         ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
 
         ArrayList<Incident> datas = new ArrayList<Incident>();
