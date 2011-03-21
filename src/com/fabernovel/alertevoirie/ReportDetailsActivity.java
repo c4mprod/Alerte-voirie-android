@@ -111,6 +111,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                                             };
     private Handler             timeoutHandler              = new Handler();
 
+    public static final int     ADDITIONAL_IMAGE_TYPE_FAR   = 1;
+    public static final int     ADDITIONAL_IMAGE_TYPE_CLOSE = 2;
+    private int                 mAdditionalImageType;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -166,11 +170,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 // findViewById(R.id.LinearLayout_comment).setVisibility(View.VISIBLE);
                 // }
 
-                if (currentIncident.confirms > 1) {
-                    ((TextView) findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms + " personnes confirment cet incident");
-                } else if (currentIncident.confirms == 1) {
-                    ((TextView) findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms + " personne confirme cet incident");
-                }
+                updateConfirmsDisplay();
 
                 imgd.download((String) currentIncident.pictures_far.get(0), ((ImageView) findViewById(R.id.ImageView_far)));
                 if (currentIncident.pictures_close.length() > 0) {
@@ -216,13 +216,14 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     }
 
     @Override
-    public void onClick(View v) {
+    public void onClick(final View v) {
         // AlertDialog.Builder builder = new AlertDialog.Builder(this);
         // AlertDialog alert;
         Log.d(Constants.PROJECT_TAG, "onClick : " + v.getId());
         mCurrentAction = -1;
         switch (v.getId()) {
             case R.id.ImageView_close:
+                mCurrentAction = -1;
                 final ActionItem actionPhoto = new ActionItem();
                 final ActionItem actionGallery = new ActionItem();
                 final QuickAction qax = new QuickAction(v);
@@ -255,7 +256,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 qax.show();
                 break;
             case R.id.ImageView_far:
-
+                mCurrentAction = -1;
                 if (hasPic) {
                     final QuickAction qa = new QuickAction(v);
                     final ActionItem actionNew = new ActionItem();
@@ -366,8 +367,14 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 // builder.setMessage(R.string.report_detail_new_report_ok).setCancelable(false).setPositiveButton("Ok", null);
                 // alert = builder.create();
                 // alert.show();
+
+                // dirty hack
+                currentIncident.confirms++;
+                updateConfirmsDisplay();
                 break;
             case R.id.existing_incidents_add_picture:
+                mCurrentAction = ACTION_ADD_IMAGE;
+
                 final ActionItem actionNew = new ActionItem();
                 final ActionItem actionModif = new ActionItem();
                 final QuickAction qa = new QuickAction(v);
@@ -376,8 +383,9 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 // chart.setIcon(getResources().getDrawable(R.drawable.chart));
                 actionNew.setOnClickListener(new OnClickListener() {
                     @Override
-                    public void onClick(View v) {
-                        takePicture(0, R.id.existing_incidents_add_picture);
+                    public void onClick(View view) {
+                        // takePicture(0, R.id.existing_incidents_add_picture);
+                        showPhotoTypeAction(v, 0);
                         // finish();
                         qa.dismiss();
                     }
@@ -387,8 +395,9 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 // production.setIcon(getResources().getDrawable(R.drawable.production));
                 actionModif.setOnClickListener(new OnClickListener() {
                     @Override
-                    public void onClick(View v) {
-                        takePicture(1, R.id.existing_incidents_add_picture);
+                    public void onClick(View view) {
+                        // takePicture(1, R.id.existing_incidents_add_picture);
+                        showPhotoTypeAction(v, 1);
                         // finish();
                         qa.dismiss();
                     }
@@ -426,6 +435,50 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
 
         }
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+    }
+
+    private void showPhotoTypeAction(View v, final int type) {
+        final ActionItem actionNew = new ActionItem();
+        final ActionItem actionModif = new ActionItem();
+        final QuickAction qa = new QuickAction(v);
+
+        actionNew.setTitle("Photo d'ensemble");
+        // chart.setIcon(getResources().getDrawable(R.drawable.chart));
+        actionNew.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAdditionalImageType = ADDITIONAL_IMAGE_TYPE_FAR;
+                takePicture(type, R.id.existing_incidents_add_picture);
+                // finish();
+                qa.dismiss();
+            }
+        });
+
+        actionModif.setTitle("Photo de près");
+        // production.setIcon(getResources().getDrawable(R.drawable.production));
+        actionModif.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAdditionalImageType = ADDITIONAL_IMAGE_TYPE_CLOSE;
+                takePicture(type, R.id.existing_incidents_add_picture);
+                // finish();
+                qa.dismiss();
+            }
+        });
+
+        qa.addActionItem(actionNew);
+        qa.addActionItem(actionModif);
+        qa.setAnimStyle(QuickAction.ANIM_AUTO);
+
+        qa.show();
+    }
+
+    private void updateConfirmsDisplay() {
+        if (currentIncident.confirms > 1) {
+            ((TextView) findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms + " personnes confirment cet incident");
+        } else if (currentIncident.confirms == 1) {
+            ((TextView) findViewById(R.id.existing_incident_status)).setText(currentIncident.confirms + " personne confirme cet incident");
+        }
     }
 
     private void loadComment(int what) {
@@ -467,80 +520,15 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         Intent gallIntent = new Intent();
         gallIntent.setType("image/*");
         gallIntent.setAction(Intent.ACTION_GET_CONTENT);
-        // gallIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriOfPicFromCamera);
-
-        // List<Intent> yourIntentsList = new ArrayList<Intent>();
-        //
-        // List<ResolveInfo> listCam = getPackageManager().queryIntentActivities(camIntent, 0);
-        // for (ResolveInfo res : listCam) {
-        // final Intent finalIntent = new Intent(camIntent);
-        // finalIntent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
-        // yourIntentsList.add(finalIntent);
-        // }
-        //
-        // List<ResolveInfo> listGall = getPackageManager().queryIntentActivities(gallIntent, 0);
-        // for (ResolveInfo res : listGall) {
-        // final Intent finalIntent = new Intent(gallIntent);
-        // finalIntent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
-        // yourIntentsList.add(finalIntent);
-        // }
 
         if (type == 0) {
-
             ReportDetailsActivity.this.startActivityForResult(camIntent, RequestCode);
         } else if (type == 1) {
-
             ReportDetailsActivity.this.startActivityForResult(Intent.createChooser(gallIntent, "Galerie photo"), RequestCode);
         }
         // startActivityForResult(intent, v.getId());
 
     }
-
-    // @Override
-    // public boolean onCreateOptionsMenu(Menu menu) {
-    //
-    // File tmpFile = null;
-    // try {
-    // tmpFile = File.createTempFile("capture", "tmp");
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
-    //
-    // Intent camIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-    // uriOfPicFromCamera = Uri.fromFile(tmpFile);
-    // camIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriOfPicFromCamera);
-    // camIntent.addCategory(Intent.CATEGORY_ALTERNATIVE);
-    //
-    // Intent gallIntent = new Intent();
-    // gallIntent.setType("image/*");
-    // gallIntent.setAction(Intent.ACTION_GET_CONTENT);
-    // gallIntent.addCategory(Intent.CATEGORY_ALTERNATIVE);
-    //
-    // // Create an Intent that describes the requirements to fulfill, to be included
-    // // in our menu. The offering app must include a category value of Intent.CATEGORY_ALTERNATIVE.
-    //
-    // // Search and populate the menu with acceptable offering applications.
-    // menu.addIntentOptions(0, // Menu group to which new items will be added
-    // 0, // Unique item ID (none)
-    // 0, // Order for the items (none)
-    // this.getComponentName(), // The current Activity name
-    // null, // Specific items to place first (none)
-    // camIntent, // Intent created above that describes our requirements
-    // 0, // Additional flags to control items (none)
-    // null); // Array of MenuItems that correlate to specific items (none)
-    //
-    // // Search and populate the menu with acceptable offering applications.
-    // menu.addIntentOptions(0, // Menu group to which new items will be added
-    // 1, // Unique item ID (none)
-    // 1, // Order for the items (none)
-    // this.getComponentName(), // The current Activity name
-    // null, // Specific items to place first (none)
-    // gallIntent, // Intent created above that describes our requirements
-    // 0, // Additional flags to control items (none)
-    // null); // Array of MenuItems that correlate to specific items (none)
-    //
-    // return super.onCreateOptionsMenu(menu);
-    // }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -593,23 +581,28 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         f.delete();
 
                         // save the new image
-                        String pictureName = requestCode == R.id.ImageView_far ? CAPTURE_FAR : CAPTURE_CLOSE;
+                        String pictureName = requestCode == R.id.ImageView_close ? CAPTURE_CLOSE : CAPTURE_FAR;
                         FileOutputStream fos = openFileOutput(pictureName, MODE_PRIVATE);
 
                         picture.compress(CompressFormat.JPEG, 80, fos);
                         fos.close();
 
+                        if (requestCode == R.id.ImageView_far || mAdditionalImageType == ADDITIONAL_IMAGE_TYPE_FAR) {
+                            loadZoom();
+                        } else if (mAdditionalImageType == ADDITIONAL_IMAGE_TYPE_CLOSE) {
+                            File img = new File(getFilesDir() + "/" + CAPTURE_FAR);
+                            mCurrentAction = ACTION_ADD_IMAGE;
+                            timeoutHandler.postDelayed(timeout, TIMEOUT);
+                            AVService.getInstance(this).postImage(this, Utils.getUdid(this), "",
+                                                                  Long.toString(currentIncident.id), null, img, false);
+                        }
+
                         if (requestCode != R.id.existing_incidents_add_picture) {
                             setPictureToImageView(pictureName, (ImageView) findViewById(requestCode));
-                            if (requestCode == R.id.ImageView_far) {
-                                loadZoom();
-                            }
-                            if (requestCode == R.id.ImageView_far && ((TextView) findViewById(R.id.TextView_address)).getText().length() > 0) {
-                                ((Button) findViewById(R.id.Button_validate)).setEnabled(true);
-                            }
-                        } else {
-                            Intent i = new Intent(getApplicationContext(), AddCommentActivity.class);
-                            startActivityForResult(i, REQUEST_IMAGE_COMMENT);
+                        }
+
+                        if (requestCode == R.id.ImageView_far && ((TextView) findViewById(R.id.TextView_address)).getText().length() > 0) {
+                            ((Button) findViewById(R.id.Button_validate)).setEnabled(true);
                         }
                         // }
 
@@ -618,10 +611,12 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         // Utils.fromInputToOutput(in, fos);
                         // fos.close();
                         // in.close();
+                        
+                        mAdditionalImageType = 0;
                     } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                        Log.e("AlerteVoirie_PM", "",e);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        Log.e("AlerteVoirie_PM", "",e);
                     } catch (NullPointerException e) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(this);
                         AlertDialog alert;
@@ -669,11 +664,11 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             case REQUEST_IMAGE_COMMENT:
                 if (resultCode == RESULT_OK) {
                     showDialog(DIALOG_PROGRESS);
-                    File img = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
+                    File img = new File(getFilesDir() + "/arrowed.jpg");
                     mCurrentAction = ACTION_ADD_IMAGE;
                     timeoutHandler.postDelayed(timeout, TIMEOUT);
                     AVService.getInstance(this).postImage(this, Utils.getUdid(this), data.getStringExtra(IntentData.EXTRA_COMMENT),
-                                                          Long.toString(currentIncident.id), img, null);
+                                                          Long.toString(currentIncident.id), img, null,false);
                 }
                 break;
             case REQUEST_COMMENT_BEFORE_EXIT:
@@ -687,10 +682,16 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 if (resultCode == RESULT_OK) {
                     // startActivityForResult(data, requestCode)
 
-                    // set new img
-                    setPictureToImageView("arrowed.jpg", (ImageView) findViewById(R.id.ImageView_far));
 
-                    loadComment(REQUEST_COMMENT);
+                    if (mCurrentAction == ACTION_ADD_IMAGE) {
+                        Intent i = new Intent(getApplicationContext(), AddCommentActivity.class);
+                        startActivityForResult(i, REQUEST_IMAGE_COMMENT);
+                    } else {
+                        // set new img
+                        setPictureToImageView("arrowed.jpg", (ImageView) findViewById(R.id.ImageView_far));
+                        loadComment(REQUEST_COMMENT);
+                    }
+
                 }
                 break;
             default:
@@ -867,7 +868,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     // TODO add a listener which handles commands properly
                     AVService.getInstance(this).postImage(null, Utils.getUdid(this), img_comment,
                                                           answer.getJSONObject(JsonData.PARAM_ANSWER).getString(JsonData.ANSWER_INCIDENT_ID), img_far,
-                                                          img_close);
+                                                          img_close,true);
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     AlertDialog alert;
                     builder.setMessage(R.string.report_detail_new_report_ok)
@@ -897,6 +898,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                 LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
                                 for (int i = 0; i < imgList.length() - 2; i++) {
                                     JSONObject imgObj = imgList.getJSONObject(i);
+                                    Log.d("AlerteVoirie_PM", "received image obj : "+imgObj);
                                     View v = getLayoutInflater().inflate(R.layout.extra_photo, null);
                                     v.setLayoutParams(params);
                                     TextView date = (TextView) v.findViewById(R.id.textView_date);

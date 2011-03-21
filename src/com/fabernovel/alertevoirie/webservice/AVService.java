@@ -134,7 +134,7 @@ public class AVService {
      *            The file containing close image
      */
     @SuppressWarnings("unchecked")
-    public void postImage(RequestListener listener, String udid, String img_comment, String incident_id, File image_far, File image_near) {
+    public void postImage(RequestListener listener, String udid, String img_comment, String incident_id, File image_far, File image_near, boolean newIncident) {
         this.listener = listener;
 
         ArrayList<Object> image_1 = new ArrayList<Object>();
@@ -152,6 +152,7 @@ public class AVService {
             image_1.add(incident_id);
             image_1.add(AV_IMG_FAR);
             image_1.add(image_far);
+            image_1.add(newIncident);
         }
 
         if (image_near != null) {
@@ -161,6 +162,7 @@ public class AVService {
             image_2.add(incident_id);
             image_2.add(AV_IMG_CLOSE);
             image_2.add(image_near);
+            image_2.add(newIncident);
         }
 
         cancelTask();
@@ -212,6 +214,9 @@ public class AVService {
                     httpPost.addHeader("img_comment", (String) PicArray.get(2));
                     httpPost.addHeader("incident_id", (String) PicArray.get(3));
                     httpPost.addHeader("type", (String) PicArray.get(4));
+                    if (((Boolean) PicArray.get(6)).booleanValue()) {
+                        httpPost.addHeader("INCIDENT_CREATION", "true");
+                    }
 
                     try {
                         /*
@@ -238,7 +243,7 @@ public class AVService {
 
                         httpPost.setEntity(file);
 
-                        Log.d(Constants.PROJECT_TAG, convertStreamToString(httpPost.getEntity().getContent()));
+//                        Log.d(Constants.PROJECT_TAG, convertStreamToString(httpPost.getEntity().getContent()));
 
                         response[i++] = httpClient.execute(httpPost, localContext);
 
@@ -246,8 +251,6 @@ public class AVService {
                         Log.e(Constants.PROJECT_TAG, "IOException postImage", e);
                     } catch (IllegalStateException e) {
                         Log.e(Constants.PROJECT_TAG, "IllegalStateException postImage", e);
-                    } catch (AVServiceErrorException e) {
-                        Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in doInBackground", e);
                     }
                 }
             }
