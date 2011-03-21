@@ -23,10 +23,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.fabernovel.alertevoirie.entities.Constants;
-import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.utils.LocationHelper;
-import com.fabernovel.alertevoirie.utils.SimpleItemizedOverlay;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapActivity;
@@ -40,8 +38,8 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     private GeoPoint        currentPoint;
     private Geocoder        geo;
     private boolean         search              = false;
-    
-    private CursorOveray cursorOverlay;
+
+    private CursorOveray    cursorOverlay;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -111,23 +109,52 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
         map.setBuiltInZoomControls(true);
         map.getController().setZoom(18);
         map.setSatellite(true);
-        
-        cursorOverlay = new CursorOveray(getResources().getDrawable(R.drawable.map_cursor));
-        map.getOverlays().add(cursorOverlay);
-        map.invalidate();
 
         findViewById(R.id.Button_validate).setEnabled(false);
 
-        // Acquire a reference to the system Location Manager
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        // get edit info
+        String oldAddress = getIntent().getStringExtra(IntentData.EXTRA_ADDRESS);
+        boolean edit = oldAddress != null;
+        if (edit) {
+            new AsyncTask<String, Void, Address>() {
+                @Override
+                protected Address doInBackground(String... params) {
+                    try {
+                        List<Address> results = geo.getFromLocationName(params[0], 1);
+                        if (results.size() > 0) {
+                            return results.get(0);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
 
-        currentBestLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                protected void onPostExecute(Address result) {
+                    ((TextView) findViewById(R.id.EditText_address_street)).setText(result.getAddressLine(0));
+                    ((TextView) findViewById(R.id.EditText_address_postcode)).setText(result.getPostalCode());
+                    ((TextView) findViewById(R.id.EditText_address_town)).setText(result.getLocality());
+                    cursorOverlay = new CursorOveray(getResources().getDrawable(R.drawable.map_cursor));
+                    GeoPoint oldGeo = new GeoPoint((int) (result.getLatitude() * 1E6), (int) (result.getLongitude() * 1E6));
+                    cursorOverlay.setGeopoint(oldGeo);
+                    map.getOverlays().add(cursorOverlay);
+                    map.getController().animateTo(oldGeo);
+                };
+            }.execute(oldAddress);
+        } else {
+            // Acquire a reference to the system Location Manager
+            locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+            currentBestLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
-        // Register the listener with the Location Manager to receive location
-        // updates
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+            // Register the listener with the Location Manager to receive location
+            // updates
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
 
+            cursorOverlay = new CursorOveray(getResources().getDrawable(R.drawable.map_cursor));
+            map.getOverlays().add(cursorOverlay);
+            map.invalidate();
+        }
         if (currentBestLocation != null) {
             handleNewLocation(currentBestLocation);
         }
@@ -160,7 +187,9 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     @Override
     protected void onStop() {
         super.onStop();
-        locationManager.removeUpdates(this);
+        if (locationManager != null) {
+            locationManager.removeUpdates(this);
+        }
     }
 
     private void handleNewLocation(Location location) {
@@ -188,24 +217,23 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
 
     private class CursorOveray extends ItemizedOverlay<OverlayItem> {
         GeoPoint p;
-        
 
         public CursorOveray(Drawable defaultMarker) {
             super(boundCenterBottom(defaultMarker));
             // TODO Auto-generated constructor stub
         }
-        
+
         public void setGeopoint(GeoPoint geo) {
             p = geo;
             populate();
         }
-        
+
         @Override
         protected OverlayItem createItem(int i) {
-            OverlayItem item = new OverlayItem(p,"","");
+            OverlayItem item = new OverlayItem(p, "", "");
             return item;
         }
-        
+
         @Override
         public int size() {
             return 1;
@@ -213,7 +241,9 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
 
         @Override
         public boolean onTap(GeoPoint p, MapView mapView) {
-            locationManager.removeUpdates(SelectPositionActivity.this);
+            if (locationManager != null) {
+                locationManager.removeUpdates(SelectPositionActivity.this);
+            }
             setMarker(p);
             return true;
         }

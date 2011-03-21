@@ -58,6 +58,7 @@ import com.fabernovel.alertevoirie.entities.IntentData;
 import com.fabernovel.alertevoirie.entities.JsonData;
 import com.fabernovel.alertevoirie.utils.Utils;
 import com.fabernovel.alertevoirie.webservice.AVService;
+import com.fabernovel.alertevoirie.webservice.AVServiceErrorException;
 import com.fabernovel.alertevoirie.webservice.RequestListener;
 
 public class ReportDetailsActivity extends Activity implements OnClickListener, RequestListener, ImageDownloaderListener {
@@ -337,7 +338,9 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                 startActivityForResult(new Intent(this, SelectCategoryActivity.class), REQUEST_CATEGORY);
                 break;
             case R.id.LinearLayout_where:
-                startActivityForResult(new Intent(this, SelectPositionActivity.class), REQUEST_POSITION);
+                Intent editIntent = new Intent(this, SelectPositionActivity.class);
+                editIntent.putExtra(IntentData.EXTRA_ADDRESS, currentIncident.address);
+                startActivityForResult(editIntent, REQUEST_POSITION);
                 break;
             case R.id.LinearLayout_comment:
                 loadComment(REQUEST_COMMENT);
@@ -838,7 +841,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             // clear pd from memory to avoid progress bar freeze when showed again
             removeDialog(DIALOG_PROGRESS);
         }
-        Log.d(Constants.PROJECT_TAG, "Request result " + (String) result);
+        //Log.d(Constants.PROJECT_TAG, "Request result " + (String) result);
 
         if (requestCode == AVService.REQUEST_IMAGE) {
             new AlertDialog.Builder(this).setMessage(R.string.news_photo_added).setPositiveButton(android.R.string.ok, null).show();
@@ -973,6 +976,26 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
               * }
               */
 
+        } else if(requestCode == AVService.REQUEST_ERROR) {
+            AVServiceErrorException error = (AVServiceErrorException) result;
+            String errorString = null;
+            switch (error.errorCode) {
+                case 19:
+                    //already invalidated
+                    errorString = getString(R.string.error_already_invalidated);
+                    break;
+
+                default:
+                    errorString = getString(R.string.server_error);
+                    break;
+            }
+            
+            new AlertDialog.Builder(this).setTitle(R.string.error_popup_title).setMessage(errorString).setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    finish();
+                }
+            }).show();
         }
 
     }

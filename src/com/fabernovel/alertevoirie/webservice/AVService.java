@@ -105,7 +105,7 @@ public class AVService {
                     listener.onRequestcompleted(REQUEST_ERROR, e);
                 } catch (AVServiceErrorException e) {
                     Log.e(Constants.PROJECT_TAG, "AVServiceErrorException in onPostExecute", e);
-                    toastServerError();
+                    //toastServerError();
                     listener.onRequestcompleted(REQUEST_ERROR, e);
                 }
 

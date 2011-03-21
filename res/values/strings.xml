@@ -5,5 +5,6 @@
     <string name="server_error">"Erreur de connexion, veuillez essayer à nouveau"</string>
     <string name="gps_error">"Erreur de géolocalisation, temps de recherche dépassé"</string>
      <string name="gps_map">"Afficher la carte"</string>
+     <string name="error_popup_title">Erreur</string>
     
 </resources>

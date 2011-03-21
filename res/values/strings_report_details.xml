@@ -15,4 +15,5 @@
 <string name="invalidate_popup_message">"L'incident sera supprimé"</string>
 <string name="timeout_popup_title">Erreur</string>
 <string name="timeout_popup_message">Une erreur de connection est survenue. Veuillez réessayer plus tard.</string>
+<string name="error_already_invalidated">Cet incident à déjà été invalidé.</string>
 </resources>
