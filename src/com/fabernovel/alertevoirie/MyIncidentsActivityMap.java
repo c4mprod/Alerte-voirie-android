@@ -129,7 +129,7 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
         tabs.check(getId());
 
         if (checked == R.id.Tab_Map_ongoing) {
-            setMapForTab(checked);
+            setMapForTab(gettabIndex(checked));
         }
 
     }
@@ -174,20 +174,15 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
         return checked;
     }
 
-    protected void setMapForTab(int gettabIndex) {
+    protected void setMapForTab(int tabIndex) {
         ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
         map.getOverlays().clear();
         JSONArray datas = null;
-        try {
-            datas = data.getJSONArray(INCIDENTS[gettabIndex]);
 
-        } catch (Exception e) {
-            Log.e(Constants.PROJECT_TAG, "Exception", e);
-            try {
-                datas = data.getJSONArray(INCIDENTS[0]);
-            } catch (JSONException e1) {
-                Log.e(Constants.PROJECT_TAG, "JSONException in setMapForTab", e1);
-            }
+        try {
+            datas = data.getJSONArray(INCIDENTS[tabIndex]);
+        } catch (JSONException e1) {
+            e1.printStackTrace();
         }
 
         lat_min = Integer.MAX_VALUE;
@@ -195,7 +190,7 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
         lon_min = Integer.MAX_VALUE;
         lon_max = 0;
 
-        if (datas != null) {
+        if (datas != null && datas.length() > 0) {
             for (int i = 0; i < datas.length(); i++) {
                 try {
 
@@ -230,6 +225,9 @@ public class MyIncidentsActivityMap extends MapActivity implements RequestListen
                     });
                 }
             }
+        } else {
+            map.getController().setZoom(14);
+            map.getController().setCenter(new GeoPoint(43297608, 5381018));
         }
         SimpleItemizedOverlay overlay = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor), this, map, items);
         map.getOverlays().add(overlay);

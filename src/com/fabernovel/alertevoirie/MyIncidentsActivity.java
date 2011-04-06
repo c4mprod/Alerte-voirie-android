@@ -21,12 +21,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -127,16 +125,7 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
             setAdapterForTab(gettabIndex(tabs.getCheckedRadioButtonId()));
 
         } else {
-
-            // launch request
-            try {
-                timeoutHandler.postDelayed(timeout, TIMEOUT);
-                AVService.getInstance(this).postJSON(new JSONArray().put(new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_MY_INCIDENTS)
-                                                                                         .put(JsonData.PARAM_UDID, Utils.getUdid(this))), this);
-                showDialog(DIALOG_PROGRESS);
-            } catch (JSONException e) {
-                Log.e(Constants.PROJECT_TAG, "error launching My Incidents", e);
-            }
+           // sendRequest();
         }
 
         // get view references
@@ -151,6 +140,32 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
         });
 
         tabs.check(getId());
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (getIntent().getExtras() == null) {            
+            sendRequest();
+        }
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        timeoutHandler.removeCallbacks(timeout);
+    }
+    
+    private void sendRequest() {
+        // launch request
+        try {
+            timeoutHandler.postDelayed(timeout, TIMEOUT);
+            AVService.getInstance(this).postJSON(new JSONArray().put(new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_MY_INCIDENTS)
+                                                                                     .put(JsonData.PARAM_UDID, Utils.getUdid(this))), this);
+            showDialog(DIALOG_PROGRESS);
+        } catch (JSONException e) {
+            Log.e(Constants.PROJECT_TAG, "error launching My Incidents", e);
+        }
     }
 
     private int gettabIndex(int id) {

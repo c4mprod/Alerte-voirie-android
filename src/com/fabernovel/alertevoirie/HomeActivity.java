@@ -180,7 +180,7 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
     public void onRequestcompleted(int requestCode, Object result) {
         try {
             JSONArray responses;
-            Log.d(Constants.PROJECT_TAG, (String) result);
+            //Log.d(Constants.PROJECT_TAG, (String) result);
             responses = new JSONArray((String) result);
 
             JSONObject response = responses.getJSONObject(0);

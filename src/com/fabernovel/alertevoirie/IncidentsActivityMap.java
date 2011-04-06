@@ -172,8 +172,8 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
         lat_max = 0;
         lon_min = Integer.MAX_VALUE;
         lon_max = 0;
-
-        if (datas != null) {
+        
+        if (datas != null && datas.size() > 0) {
             for (int i = 0; i < datas.size(); i++) {
 
                 Incident myIncident = (datas.get(i));
@@ -204,6 +204,10 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
                     });
                 }
             }
+        } else {
+            //center on marseille
+            map.getController().setZoom(14);
+            map.getController().setCenter(new GeoPoint(43297608, 5381018));
         }
 
         SimpleItemizedOverlay overlay = new SimpleItemizedOverlay(getResources().getDrawable(R.drawable.map_cursor), this, map, items);

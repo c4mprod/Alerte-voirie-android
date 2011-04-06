@@ -10,7 +10,6 @@ import android.util.Log;
 import com.fabernovel.alertevoirie.R;
 import com.fabernovel.alertevoirie.utils.Utils;
 import com.google.android.maps.GeoPoint;
-import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.OverlayItem;
 
 public class Incident extends OverlayItem {

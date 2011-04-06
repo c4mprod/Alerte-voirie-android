@@ -39,6 +39,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -187,11 +188,11 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         } else {
             validate.setEnabled(false);
             findViewById(R.id.LinearLayout_comment).setOnClickListener(this);
+            findViewById(R.id.ImageView_far).setOnClickListener(this);
+            findViewById(R.id.ImageView_close).setOnClickListener(this);
         }
 
         // init buttons
-        findViewById(R.id.ImageView_far).setOnClickListener(this);
-        findViewById(R.id.ImageView_close).setOnClickListener(this);
         findViewById(R.id.LinearLayout_category).setOnClickListener(this);
         findViewById(R.id.LinearLayout_where).setOnClickListener(this);
 
@@ -862,11 +863,17 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                      */
 
                     File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
-                    File img_far = new File(getFilesDir() + "/" + CAPTURE_ARROW);
-
-                    if (!img_far.exists()) {
-                        img_far = new File(getFilesDir() + "/" + CAPTURE_FAR);
+                    if (!img_close.exists() || ((ImageView)findViewById(R.id.ImageView_close)).getDrawable() == null) {
+                        img_close = null;
                     }
+                    File img_far = new File(getFilesDir() + "/" + CAPTURE_ARROW);
+                    if (!img_far.exists() || ((ImageView)findViewById(R.id.ImageView_far)).getDrawable() == null) {
+                        img_far = null;
+                    }
+
+//                    if (!img_far.exists()) {
+//                        img_far = new File(getFilesDir() + "/" + CAPTURE_FAR);
+//                    }
 
                     // TODO add a listener which handles commands properly
                     AVService.getInstance(this).postImage(null, Utils.getUdid(this), img_comment,

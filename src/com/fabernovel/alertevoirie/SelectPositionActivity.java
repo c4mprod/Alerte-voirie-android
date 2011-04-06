@@ -40,6 +40,7 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
     private boolean         search              = false;
 
     private CursorOveray    cursorOverlay;
+    private AsyncTask<String, Void, Address> adressTask;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -116,7 +117,7 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
         String oldAddress = getIntent().getStringExtra(IntentData.EXTRA_ADDRESS);
         boolean edit = oldAddress != null;
         if (edit) {
-            new AsyncTask<String, Void, Address>() {
+            adressTask = new AsyncTask<String, Void, Address>() {
                 @Override
                 protected Address doInBackground(String... params) {
                     try {
@@ -140,7 +141,8 @@ public class SelectPositionActivity extends MapActivity implements LocationListe
                     map.getOverlays().add(cursorOverlay);
                     map.getController().animateTo(oldGeo);
                 };
-            }.execute(oldAddress);
+            };
+            adressTask.execute(oldAddress);
         } else {
             // Acquire a reference to the system Location Manager
             locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);

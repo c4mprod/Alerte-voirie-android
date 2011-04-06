@@ -4,10 +4,14 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
@@ -28,6 +32,12 @@ public class CustomPopupWindow {
 	private View root;
 	private Drawable background = null;
 	protected final WindowManager windowManager;
+	
+	private Handler dismissDelayer = new Handler() {
+	    public void handleMessage(Message msg) {
+	        window.dismiss();
+	    };
+	};
 	
 	/**
 	 * Create a QuickAction
@@ -206,6 +216,9 @@ public class CustomPopupWindow {
 	}
 	
 	public void dismiss() {
-		window.dismiss();
+	    //window.getContentView().setVisibility(View.GONE);
+	    //HACK leave some time for buttons to update and draw their state
+	    dismissDelayer.sendEmptyMessageDelayed(0,10);
+//		window.dismiss();
 	}
 }

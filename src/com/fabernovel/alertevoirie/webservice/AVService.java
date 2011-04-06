@@ -60,6 +60,7 @@ public class AVService {
 
     public void postJSON(JSONArray json, RequestListener listener) {
         this.listener = listener;
+        Log.d("AlerteVoirie_PM", "request : "+json);
         cancelTask();
         currentTask = new QueryTask().execute(json.toString(), AV_URL);
     }
@@ -259,9 +260,10 @@ public class AVService {
 
         @Override
         protected void onPostExecute(HttpResponse[] result) {
-
             // error somewhere... asuming all went done
-            listener.onRequestcompleted(REQUEST_IMAGE, null);
+            if (listener != null) {                
+                listener.onRequestcompleted(REQUEST_IMAGE, null);
+            }
             // try {
             //
             // JSONArray jo = new JSONArray(convertStreamToString(result[0].getEntity().getContent()));

@@ -54,7 +54,9 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
         findViewById(R.id.RadioGroup_tabs).setVisibility(View.GONE);
         findViewById(R.id.ToggleButton01).setVisibility(View.GONE);
+    }
 
+    private void sendRequest() {
         try {
             JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_USERS_ACTVITIES)
             // .put(JsonData.PARAM_UDID, Utils.getUdid(this))
@@ -70,7 +72,12 @@ public class NewsActivity extends ListActivity implements RequestListener {
         } catch (JSONException e) {
             Log.e(Constants.PROJECT_TAG, "error in onCreate : JSONException", e);
         }
-
+    }
+    
+    @Override
+    protected void onStart() {
+        super.onStart();
+        sendRequest();
     }
 
     @Override
@@ -109,62 +116,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
 //@formatter:off
 /**
-        [
-            {
-                "answer": {
-                    "closest_incidents": [
-                        {
-                            "incidentObj": {
-                                "descriptive": "Barri\u00e8res de travaux \u00f4ter", 
-                                "pictures": {
-                                    "far": [
-                                        "http://alerte-voirie.ppd.c4mprod.com//media/collection_image/2010/08/17/2010-08-17_0.518940819845_picture.jpg",
-                                        "http://alerte-voirie.ppd.c4mprod.com//media/collection_image/2010/08/16/2010-08-16_0.890694847535_picture.jpg"
-                                    ],
-                                    "close": [
-                                        "http://alerte-voirie.ppd.c4mprod.com//media/collection_image/2010/08/17/2010-08-17_0.248174823475_picture.jpg", 
-                                        "http://alerte-voirie.ppd.c4mprod.com//media/collection_image/2010/08/17/2010-08-17_0.33014646727_picture.jpg"
-                                    ]
-                                }, 
-                                "categoryId": 27,
-                                "date": "2010-08-16 15:28:24.740044", 
-                                "state": "U", 
-                                "address": "36 Quai du lazaret\n13002 Marseille", 
-                                "lat": 43.309444427490227, 
-                                "lng": 5.3668661117553711, 
-                                "confirms": 1, 
-                                "id": 27, 
-                                "invalidations": 0
-                            }
-                        }, 
-                        {
-                            "incidentObj": {
-                                "descriptive": "Super t\u00e9l\u00e9phone", 
-                                "pictures": {
-                                    "far": [
-                                        "http://alerte-voirie.ppd.c4mprod.com//media/collection_image/2010/09/21/2010-09-21_0.86314714662_picture.jpg"
-                                    ], 
-                                    "close": [
-                                        "http://alerte-voirie.ppd.c4mprod.com//media/collection_image/2010/09/21/2010-09-21_0.261345643559_picture.jpg"
-                                    ]
-                                }, 
-                                "categoryId": 33, 
-                                "date": "2010-09-21 11:05:16.760450", 
-                                "state": "O", 
-                                "address": "45 L'Autoroute du Littoral\n13002 Marseille", 
-                                "lat": 43.317855834960938, 
-                                "lng": 5.3635425567626953, 
-                                "confirms": 0, 
-                                "id": 34, 
-                                "invalidations": 0
-                            }
-                        }
-                    ], 
-                    "status": 0
-                },
-                "request": "getIncidentsByPosition"
-            }
-        ]
+        
 */
 //@formatter:on 
 
@@ -176,49 +128,40 @@ public class NewsActivity extends ListActivity implements RequestListener {
 
             if (requestCode == AVService.REQUEST_JSON) {
 
-                lock = new Vector<Long>();
-                logs = new TreeMap<Long, JSONObject>();
-                logList = new TreeMap<String, JSONObject>(Collections.reverseOrder());
-                for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_INCIDENT_LOG).length(); i++) {
-                    JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_INCIDENT_LOG).getJSONObject(i);
-                    logs.put(job.getLong(JsonData.ANSWER_INCIDENT_ID), job);
-                    logList.put(job.getString(JsonData.PARAM_INCIDENT_DATE) + job.getLong(JsonData.ANSWER_INCIDENT_ID), job);
-                }
-
                 if (JsonData.VALUE_REQUEST_GET_USERS_ACTVITIES.equals(response.getString(JsonData.PARAM_REQUEST))) {
+                    lock = new Vector<Long>();
+                    logs = new TreeMap<Long, JSONObject>();
+                    logList = new TreeMap<String, JSONObject>(Collections.reverseOrder());
+                    JSONArray incidentLog = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_INCIDENT_LOG);
+                    for (int i = 0; i < incidentLog.length(); i++) {
+                        JSONObject job = incidentLog.getJSONObject(i);
+                        logs.put(job.getLong(JsonData.ANSWER_INCIDENT_ID), job);
+                        logList.put(job.getString(JsonData.PARAM_INCIDENT_DATE) + job.getLong(JsonData.ANSWER_INCIDENT_ID), job);
+                    }
 
                     JSONArray items = new JSONArray();
 
-                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER)
-                                                .getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS)
-                                                .length(); i++) {
-                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER)
-                                                 .getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                 .getJSONArray(JsonData.PARAM_ONGOING_INCIDENTS)
-                                                 .getJSONObject(i);
+                    JSONArray ongoingIncidents = response.getJSONObject(JsonData.PARAM_ANSWER)
+                                                         .getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                         .getJSONArray(JsonData.PARAM_ONGOING_INCIDENTS);
+                    for (int i = 0; i < ongoingIncidents.length(); i++) {
+                        JSONObject job = ongoingIncidents.getJSONObject(i);
                         if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);// items.put(job);
                     }
 
-                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER)
-                                                .getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS)
-                                                .length(); i++) {
-                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER)
-                                                 .getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                 .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS)
-                                                 .getJSONObject(i);
+                    JSONArray updatedIncidents = response.getJSONObject(JsonData.PARAM_ANSWER)
+                                                         .getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                         .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS);
+                    for (int i = 0; i < updatedIncidents.length(); i++) {
+                        JSONObject job = updatedIncidents.getJSONObject(i);
                         if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);
                     }
 
-                    for (int i = 0; i < response.getJSONObject(JsonData.PARAM_ANSWER)
-                                                .getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS)
-                                                .length(); i++) {
-                        JSONObject job = response.getJSONObject(JsonData.PARAM_ANSWER)
-                                                 .getJSONObject(JsonData.PARAM_INCIDENTS)
-                                                 .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS)
-                                                 .getJSONObject(i);
+                    JSONArray resolvedIncidents = response.getJSONObject(JsonData.PARAM_ANSWER)
+                                                          .getJSONObject(JsonData.PARAM_INCIDENTS)
+                                                          .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS);
+                    for (int i = 0; i < resolvedIncidents.length(); i++) {
+                        JSONObject job = resolvedIncidents.getJSONObject(i);
                         if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);
                     }
 
