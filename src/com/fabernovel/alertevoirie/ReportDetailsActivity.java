@@ -39,7 +39,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -98,6 +97,8 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
     private ProgressDialog      mPd;
 
     private int                 mCurrentAction;
+
+    private boolean             mConfirmedFlag              = false;
 
     private ImageDownloader     imgd;
 
@@ -597,8 +598,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                             File img = new File(getFilesDir() + "/" + CAPTURE_FAR);
                             mCurrentAction = ACTION_ADD_IMAGE;
                             timeoutHandler.postDelayed(timeout, TIMEOUT);
-                            AVService.getInstance(this).postImage(this, Utils.getUdid(this), "",
-                                                                  Long.toString(currentIncident.id), null, img, false);
+                            AVService.getInstance(this).postImage(this, Utils.getUdid(this), "", Long.toString(currentIncident.id), null, img, false);
                         }
 
                         if (requestCode != R.id.existing_incidents_add_picture) {
@@ -615,12 +615,12 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         // Utils.fromInputToOutput(in, fos);
                         // fos.close();
                         // in.close();
-                        
+
                         mAdditionalImageType = 0;
                     } catch (FileNotFoundException e) {
-                        Log.e("AlerteVoirie_PM", "",e);
+                        Log.e("AlerteVoirie_PM", "", e);
                     } catch (IOException e) {
-                        Log.e("AlerteVoirie_PM", "",e);
+                        Log.e("AlerteVoirie_PM", "", e);
                     } catch (NullPointerException e) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(this);
                         AlertDialog alert;
@@ -672,7 +672,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     mCurrentAction = ACTION_ADD_IMAGE;
                     timeoutHandler.postDelayed(timeout, TIMEOUT);
                     AVService.getInstance(this).postImage(this, Utils.getUdid(this), data.getStringExtra(IntentData.EXTRA_COMMENT),
-                                                          Long.toString(currentIncident.id), img, null,false);
+                                                          Long.toString(currentIncident.id), img, null, false);
                 }
                 break;
             case REQUEST_COMMENT_BEFORE_EXIT:
@@ -685,7 +685,6 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             case REQUEST_DETAILS:
                 if (resultCode == RESULT_OK) {
                     // startActivityForResult(data, requestCode)
-
 
                     if (mCurrentAction == ACTION_ADD_IMAGE) {
                         Intent i = new Intent(getApplicationContext(), AddCommentActivity.class);
@@ -842,7 +841,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             // clear pd from memory to avoid progress bar freeze when showed again
             removeDialog(DIALOG_PROGRESS);
         }
-        //Log.d(Constants.PROJECT_TAG, "Request result " + (String) result);
+        // Log.d(Constants.PROJECT_TAG, "Request result " + (String) result);
 
         if (requestCode == AVService.REQUEST_IMAGE) {
             new AlertDialog.Builder(this).setMessage(R.string.news_photo_added).setPositiveButton(android.R.string.ok, null).show();
@@ -863,22 +862,22 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                      */
 
                     File img_close = new File(getFilesDir() + "/" + CAPTURE_CLOSE);
-                    if (!img_close.exists() || ((ImageView)findViewById(R.id.ImageView_close)).getDrawable() == null) {
+                    if (!img_close.exists() || ((ImageView) findViewById(R.id.ImageView_close)).getDrawable() == null) {
                         img_close = null;
                     }
                     File img_far = new File(getFilesDir() + "/" + CAPTURE_ARROW);
-                    if (!img_far.exists() || ((ImageView)findViewById(R.id.ImageView_far)).getDrawable() == null) {
+                    if (!img_far.exists() || ((ImageView) findViewById(R.id.ImageView_far)).getDrawable() == null) {
                         img_far = null;
                     }
 
-//                    if (!img_far.exists()) {
-//                        img_far = new File(getFilesDir() + "/" + CAPTURE_FAR);
-//                    }
+                    // if (!img_far.exists()) {
+                    // img_far = new File(getFilesDir() + "/" + CAPTURE_FAR);
+                    // }
 
                     // TODO add a listener which handles commands properly
                     AVService.getInstance(this).postImage(null, Utils.getUdid(this), img_comment,
                                                           answer.getJSONObject(JsonData.PARAM_ANSWER).getString(JsonData.ANSWER_INCIDENT_ID), img_far,
-                                                          img_close,true);
+                                                          img_close, true);
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     AlertDialog alert;
                     builder.setMessage(R.string.report_detail_new_report_ok)
@@ -908,7 +907,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                 LayoutParams params = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
                                 for (int i = 0; i < imgList.length() - 2; i++) {
                                     JSONObject imgObj = imgList.getJSONObject(i);
-                                    Log.d("AlerteVoirie_PM", "received image obj : "+imgObj);
+                                    Log.d("AlerteVoirie_PM", "received image obj : " + imgObj);
                                     View v = getLayoutInflater().inflate(R.layout.extra_photo, null);
                                     v.setLayoutParams(params);
                                     TextView date = (TextView) v.findViewById(R.id.textView_date);
@@ -930,6 +929,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                                 }
                                 break;
                             case ACTION_CONFIRM_INCIDENT:
+                                findViewById(R.id.existing_incidents_confirmed).setEnabled(false);
                                 new AlertDialog.Builder(this).setMessage(R.string.news_incidents_confirmed).setPositiveButton(android.R.string.ok, null).show();
                                 break;
                             case ACTION_INVALID_INCIDENT: {
@@ -967,6 +967,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                         // other things
                         // FIXME show popups instead of toasts !
                         if ((answer.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_STATUS)) == 18) {
+                            findViewById(R.id.existing_incidents_confirmed).setEnabled(false);
                             Toast.makeText(this, getString(R.string.incident_already_confirmed), Toast.LENGTH_LONG).show();
                         } else {
                             Log.d("AlerteVoirie_PM", "erreur ?");
@@ -983,12 +984,12 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
               * }
               */
 
-        } else if(requestCode == AVService.REQUEST_ERROR) {
+        } else if (requestCode == AVService.REQUEST_ERROR) {
             AVServiceErrorException error = (AVServiceErrorException) result;
             String errorString = null;
             switch (error.errorCode) {
                 case 19:
-                    //already invalidated
+                    // already invalidated
                     errorString = getString(R.string.error_already_invalidated);
                     break;
 
@@ -996,13 +997,16 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
                     errorString = getString(R.string.server_error);
                     break;
             }
-            
-            new AlertDialog.Builder(this).setTitle(R.string.error_popup_title).setMessage(errorString).setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            }).show();
+
+            new AlertDialog.Builder(this).setTitle(R.string.error_popup_title)
+                                         .setMessage(errorString)
+                                         .setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                             @Override
+                                             public void onClick(DialogInterface dialog, int which) {
+                                                 finish();
+                                             }
+                                         })
+                                         .show();
         }
 
     }

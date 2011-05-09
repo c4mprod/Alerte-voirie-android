@@ -37,9 +37,9 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
     protected int                checked;
     String[]                     title           = new String[3];
     private MapView              map;
-    ArrayList<Incident>          Ongoing         = new ArrayList<Incident>();
-    ArrayList<Incident>          Updated         = new ArrayList<Incident>();
-    ArrayList<Incident>          Resolved        = new ArrayList<Incident>();
+    ArrayList<Incident>          ongoing         = new ArrayList<Incident>();
+    ArrayList<Incident>          updated         = new ArrayList<Incident>();
+    ArrayList<Incident>          resolved        = new ArrayList<Incident>();
     int                          lat_min         = Integer.MAX_VALUE;
     int                          lat_max         = 0;
     int                          lon_min         = Integer.MAX_VALUE;
@@ -56,32 +56,26 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
         map = (MapView) findViewById(R.id.MapView_mymap);
         tabs = (RadioGroup) findViewById(R.id.RadioGroup_tabs_map);
 
-        map.setSatellite(false);
-        map.invalidate();
-
         findViewById(R.id.ToggleButton_Map).setVisibility(View.GONE);
 
-        // launch request
-        try {
-            showDialog(DIALOG_PROGRESS);
-            JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_INCIDENTS_BY_POSITION)
-                                                 .put(JsonData.PARAM_RADIUS, JsonData.VALUE_RADIUS_FAR)
-                                                 .put(JsonData.PARAM_POSITION,
-                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, Last_Location.longitude)
-                                                                      .put(JsonData.PARAM_POSITION_LATITUDE, Last_Location.latitude));
-
-            AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
-
-        } catch (Exception e) {
-            Log.e(Constants.PROJECT_TAG, "Eror retrieving incidents", e);
-        }
-
         for (int i = 0; i < 3; i++) {
-            title[i] = "0\n"
-                       + (INCIDENTS[i].equals("ongoing_incidents") ? getString(R.string.home_label_current)
-                                                                  : INCIDENTS[i].equals("updated_incidents") ? getString(R.string.home_label_update)
-                                                                                                            : INCIDENTS[i].equals("resolved_incidents") ? getString(R.string.home_label_solved)
-                                                                                                                                                       : "");
+            int quantity = 0;
+            String stitle = null;
+            switch (i) {
+                case 0:
+                    stitle = getResources().getQuantityString(R.plurals.home_label_current, quantity, quantity);
+                    break;
+                case 1:
+                    stitle = getResources().getQuantityString(R.plurals.home_label_update, quantity, quantity);
+                    break;
+                case 2:
+                    stitle = getResources().getQuantityString(R.plurals.home_label_solved, quantity, quantity);
+                    break;
+
+                default:
+                    break;
+            }
+            title[i] = stitle;
             ((TextView) tabs.getChildAt(i)).setText(title[i]);
             ((TextView) tabs.getChildAt(i)).setEnabled(false);
 
@@ -104,6 +98,35 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
          * setMapForTab(checked);
          * }
          */
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // refresh map (important doing this here because of other mapview in next screens)
+        map.setSatellite(false);
+        map.invalidate();
+        map.getOverlays().clear();
+        data = new JSONArray[3];
+        ongoing.clear();
+        updated.clear();
+        resolved.clear();
+
+        // launch request
+        try {
+            showDialog(DIALOG_PROGRESS);
+            JSONObject request = new JSONObject().put(JsonData.PARAM_REQUEST, JsonData.VALUE_REQUEST_GET_INCIDENTS_BY_POSITION)
+                                                 .put(JsonData.PARAM_RADIUS, JsonData.VALUE_RADIUS_FAR)
+                                                 .put(JsonData.PARAM_POSITION,
+                                                      new JSONObject().put(JsonData.PARAM_POSITION_LONGITUDE, Last_Location.longitude)
+                                                                      .put(JsonData.PARAM_POSITION_LATITUDE, Last_Location.latitude));
+
+            AVService.getInstance(this).postJSON(new JSONArray().put(request), this);
+
+        } catch (Exception e) {
+            Log.e(Constants.PROJECT_TAG, "Eror retrieving incidents", e);
+        }
 
     }
 
@@ -135,36 +158,44 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
         ArrayList<Incident> datas = new ArrayList<Incident>();
         switch (gettabIndex) {
             case 0:
-                datas = Ongoing;
+                datas = ongoing;
 
                 break;
             case 1:
-                datas = Updated;
+                datas = updated;
                 break;
             case 2:
-                datas = Resolved;
+                datas = resolved;
                 break;
 
             default:
                 break;
         }
         map.getOverlays().clear();
-        String title;
 
         for (Incident myIncident : datas) {
 
             items.add(myIncident);
-            title = datas.size()
-                    + "\n"
-                    + (INCIDENTS[gettabIndex].equals("ongoing_incidents") ? getString(R.string.home_label_current)
-                                                                         : INCIDENTS[gettabIndex].equals("updated_incidents") ? getString(R.string.home_label_update)
-                                                                                                                             : INCIDENTS[gettabIndex].equals("resolved_incidents") ? getString(R.string.home_label_solved)
-                                                                                                                                                                                  : "");
 
-            if (datas.size() > 1 && INCIDENTS[gettabIndex].equals("resolved_incidents")) title = title + "s";
+            int quantity = datas.size();
+            String title = null;
+            switch (gettabIndex) {
+                case 0:
+                    title = getResources().getQuantityString(R.plurals.home_label_current, quantity, quantity);
+                    break;
+                case 1:
+                    title = getResources().getQuantityString(R.plurals.home_label_update, quantity, quantity);
+                    break;
+                case 2:
+                    title = getResources().getQuantityString(R.plurals.home_label_solved, quantity, quantity);
+                    break;
+
+                default:
+                    break;
+            }
 
             ((TextView) tabs.getChildAt(gettabIndex)).setText(title);
-            if (title.startsWith("0")) ((TextView) tabs.getChildAt(gettabIndex)).setEnabled(false);
+            if (quantity == 0) ((TextView) tabs.getChildAt(gettabIndex)).setEnabled(false);
 
         }
 
@@ -172,7 +203,7 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
         lat_max = 0;
         lon_min = Integer.MAX_VALUE;
         lon_max = 0;
-        
+
         if (datas != null && datas.size() > 0) {
             for (int i = 0; i < datas.size(); i++) {
 
@@ -205,7 +236,7 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
                 }
             }
         } else {
-            //center on marseille
+            // center on marseille
             map.getController().setZoom(14);
             map.getController().setCenter(new GeoPoint(43297608, 5381018));
         }
@@ -313,13 +344,13 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
                         Incident incident = Incident.fromJSONObject(this, items.getJSONObject(i));
                         switch (items.getJSONObject(i).getString(JsonData.PARAM_INCIDENT_STATUS).charAt(0)) {
                             case 'O':
-                                Ongoing.add(incident);
+                                ongoing.add(incident);
                                 break;
                             case 'U':
-                                Updated.add(incident);
+                                updated.add(incident);
                                 break;
                             case 'R':
-                                Resolved.add(incident);
+                                resolved.add(incident);
                                 break;
 
                             default:
@@ -334,26 +365,31 @@ public class IncidentsActivityMap extends MapActivity implements RequestListener
                     for (int i = 0; i < 3; i++) {
 
                         switch (i) {
-                            case 0:
-                                datas = Ongoing;
-                                title = getString(R.string.home_label_current);
+                            case 0: {
+                                datas = ongoing;
+                                int quantity = datas.size();
+                                title = getResources().getQuantityString(R.plurals.home_label_current, quantity, quantity);
                                 break;
-                            case 1:
-                                datas = Updated;
-                                title = getString(R.string.home_label_update);
+                            }
+                            case 1: {
+                                datas = updated;
+                                int quantity = datas.size();
+                                title = getResources().getQuantityString(R.plurals.home_label_update, quantity, quantity);
                                 break;
-                            case 2:
-                                datas = Resolved;
-                                title = getString(R.string.home_label_solved);
-                                if (datas.size() > 1) title += "s";
+                            }
+                            case 2: {
+                                datas = resolved;
+                                int quantity = datas.size();
+                                title = getResources().getQuantityString(R.plurals.home_label_solved, quantity, quantity);
                                 break;
+                            }
                             default:
                                 datas = new ArrayList<Incident>();
                                 title = "0";
                                 break;
                         }
 
-                        ((TextView) tabs.getChildAt(i)).setText(datas.size() + "\n" + title);
+                        ((TextView) tabs.getChildAt(i)).setText(title);
 
                         if (!title.startsWith("0")) ((TextView) tabs.getChildAt(i)).setEnabled(true);
 

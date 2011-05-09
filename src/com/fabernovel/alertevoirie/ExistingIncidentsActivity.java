@@ -7,11 +7,13 @@ import org.json.JSONObject;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
+import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
@@ -25,6 +27,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.c4mprod.utils.ImageDownloader;
+import com.fabernovel.alertevoirie.entities.Category;
 import com.fabernovel.alertevoirie.entities.Constants;
 import com.fabernovel.alertevoirie.entities.Incident;
 import com.fabernovel.alertevoirie.entities.IntentData;
@@ -38,7 +41,7 @@ import com.fabernovel.alertevoirie.webservice.RequestListener;
 public class ExistingIncidentsActivity extends ListActivity implements RequestListener, LocationListener {
     private static final int      DIALOG_PROGRESS = 0;
     private final ImageDownloader imageDownloader = new ImageDownloader();
-    private ProgressDialog mPd;
+    private ProgressDialog        mPd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,8 +124,8 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                         Incident inc = Incident.fromJSONObject(this, items.getJSONObject(i));
                         if (inc.state != 'R') items2.put(items.getJSONObject(i));
                     }
-                    setListAdapter(new MagicAdapter(this, items2, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION,
-                            JsonData.PARAM_INCIDENT_ADDRESS }, new int[] { R.id.TextView_title, R.id.TextView_text }));
+                    setListAdapter(new MagicAdapter(this, items2, R.layout.cell_report, new String[] { JsonData.PARAM_INCIDENT_DESCRIPTION },
+                                                    new int[] { R.id.TextView_text }));
                 }
             }
         } catch (JSONException e) {
@@ -133,7 +136,7 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
 
         }
 
-        if (mPd!= null) {
+        if (mPd != null) {
             mPd.dismiss();
         }
 
@@ -215,6 +218,21 @@ public class ExistingIncidentsActivity extends ListActivity implements RequestLi
                                                                                                                          Integer.toString((int) distances[0])));
                 ((TextView) v.findViewById(R.id.TextView_distance)).setVisibility(View.VISIBLE);
                 // ImageManager.fetchDrawableOnThread(imgName, icone, icone.getDrawable());
+
+                // get category
+                long catId = incident.categoryId;
+                String category = null;
+                Log.d(Constants.PROJECT_TAG, "Cat id = " + catId);
+
+                Cursor c = getContentResolver().query(ContentUris.withAppendedId(Category.CONTENT_URI, catId), new String[] { Category.PARENT, Category.NAME },
+                                                      null, null, null);
+
+                if (c.moveToFirst()) {
+                    category = c.getString(c.getColumnIndex(Category.NAME));
+                }
+                c.close();
+
+                ((TextView) v.findViewById(R.id.TextView_title)).setText(category);
 
             } catch (JSONException e) {
                 Log.e(Constants.PROJECT_TAG, ((JSONObject) getItem(position)).toString(), e);

@@ -85,7 +85,7 @@ public class SimpleItemizedOverlay extends ItemizedOverlay {
                         i.putExtra("existing", true);
                         i.putExtra("event", (String) mBubbleView.getTag());
                         c.startActivity(i);
-
+                        clearBubble();
                     }
                 });
             } else {

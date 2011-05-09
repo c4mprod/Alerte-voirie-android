@@ -17,6 +17,8 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.AccelerateInterpolator;
@@ -34,6 +36,8 @@ import com.fabernovel.alertevoirie.webservice.RequestListener;
 
 public class HomeActivity extends Activity implements OnClickListener, LocationListener, RequestListener {
     private static final int DIALOG_PROGRESS = 0;
+    private static final int MENU_CREDITS = 0;
+    
     private LocationManager  locationManager;
     private Location         lastlocation;
     private boolean          dialog_shown    = false;
@@ -204,17 +208,10 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
                     int ongoing_incidents = response.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_ONGOING_INCIDENTS);
                     int updated_incidents = response.getJSONObject(JsonData.PARAM_ANSWER).getInt(JsonData.PARAM_UPDATED_INCIDENTS);
 
-                    if (resolved_incidents > 2) {
-                        ((TextView) findViewById(R.id.Home_TextView_Solved)).setText(((String) ((TextView) findViewById(R.id.Home_TextView_Solved)).getText()).replace("us",
-                                                                                                                                                                       "u")
-                                                                                                                                                              .replace("u",
-                                                                                                                                                                       "us"));
-                    }
 
-                    ((TextView) findViewById(R.id.Home_TextView_Solved_Number)).setText("" + resolved_incidents);
-                    ((TextView) findViewById(R.id.Home_TextView_Current_Number)).setText("" + ongoing_incidents);
-                    ((TextView) findViewById(R.id.Home_TextView_Update_Number)).setText("" + updated_incidents);
-
+                    ((TextView) findViewById(R.id.Home_TextView_Solved)).setText(getResources().getQuantityString(R.plurals.home_label_solved, resolved_incidents,resolved_incidents));
+                    ((TextView) findViewById(R.id.Home_TextView_Current)).setText(getResources().getQuantityString(R.plurals.home_label_current, ongoing_incidents,ongoing_incidents));
+                    ((TextView) findViewById(R.id.Home_TextView_Update)).setText(getResources().getQuantityString(R.plurals.home_label_update, updated_incidents,updated_incidents));
                 }
             }
 
@@ -236,5 +233,25 @@ public class HomeActivity extends Activity implements OnClickListener, LocationL
         hidedialog = true;
         handleNewLocation(lastlocation);
         super.onResume();
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, MENU_CREDITS, Menu.FIRST, R.string.menu_credits).setIcon(android.R.drawable.ic_menu_info_details);
+        return super.onCreateOptionsMenu(menu);
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case MENU_CREDITS:
+                Intent i = new Intent(this, CreditsActivity.class);
+                startActivity(i);
+                break;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
     }
 }

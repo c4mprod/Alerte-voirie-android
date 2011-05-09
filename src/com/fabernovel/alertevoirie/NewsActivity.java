@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -41,9 +42,9 @@ import com.fabernovel.alertevoirie.webservice.RequestListener;
 public class NewsActivity extends ListActivity implements RequestListener {
     private static final int            DIALOG_PROGRESS = 0;
     private JSONObject                  response;
-    private TreeMap<Long, JSONObject>   logs;
+    private SparseArray<JSONObject>     logs;
     private TreeMap<String, JSONObject> logList;
-    private Vector<Long>                lock;
+    private Vector<Integer>             lock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +74,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
             Log.e(Constants.PROJECT_TAG, "error in onCreate : JSONException", e);
         }
     }
-    
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -124,18 +125,18 @@ public class NewsActivity extends ListActivity implements RequestListener {
             JSONArray responses;
             responses = new JSONArray((String) result);
             response = responses.getJSONObject(0);
-            TreeMap<Long, JSONObject> events = new TreeMap<Long, JSONObject>();
+            SparseArray<JSONObject> events = new SparseArray<JSONObject>();
 
             if (requestCode == AVService.REQUEST_JSON) {
 
                 if (JsonData.VALUE_REQUEST_GET_USERS_ACTVITIES.equals(response.getString(JsonData.PARAM_REQUEST))) {
-                    lock = new Vector<Long>();
-                    logs = new TreeMap<Long, JSONObject>();
+                    lock = new Vector<Integer>();
+                    logs = new SparseArray<JSONObject>();
                     logList = new TreeMap<String, JSONObject>(Collections.reverseOrder());
                     JSONArray incidentLog = response.getJSONObject(JsonData.PARAM_ANSWER).getJSONArray(JsonData.PARAM_INCIDENT_LOG);
                     for (int i = 0; i < incidentLog.length(); i++) {
                         JSONObject job = incidentLog.getJSONObject(i);
-                        logs.put(job.getLong(JsonData.ANSWER_INCIDENT_ID), job);
+                        logs.put(job.getInt(JsonData.ANSWER_INCIDENT_ID), job);
                         logList.put(job.getString(JsonData.PARAM_INCIDENT_DATE) + job.getLong(JsonData.ANSWER_INCIDENT_ID), job);
                     }
 
@@ -146,7 +147,11 @@ public class NewsActivity extends ListActivity implements RequestListener {
                                                          .getJSONArray(JsonData.PARAM_ONGOING_INCIDENTS);
                     for (int i = 0; i < ongoingIncidents.length(); i++) {
                         JSONObject job = ongoingIncidents.getJSONObject(i);
-                        if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);// items.put(job);
+                        int key = job.getInt(JsonData.PARAM_INCIDENT_ID);
+                        if (logs.get(key) != null) {
+                            Log.d("AlerteVoirie_PM", "add ongoing incident "+key);
+                            events.put(key, job);// items.put(job);
+                        }
                     }
 
                     JSONArray updatedIncidents = response.getJSONObject(JsonData.PARAM_ANSWER)
@@ -154,7 +159,11 @@ public class NewsActivity extends ListActivity implements RequestListener {
                                                          .getJSONArray(JsonData.PARAM_UPDATED_INCIDENTS);
                     for (int i = 0; i < updatedIncidents.length(); i++) {
                         JSONObject job = updatedIncidents.getJSONObject(i);
-                        if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);
+                        int key = job.getInt(JsonData.PARAM_INCIDENT_ID);
+                        if (logs.get(key) != null) {
+                            Log.d("AlerteVoirie_PM", "add updated incident "+key);
+                            events.put(key, job);
+                        }
                     }
 
                     JSONArray resolvedIncidents = response.getJSONObject(JsonData.PARAM_ANSWER)
@@ -162,17 +171,27 @@ public class NewsActivity extends ListActivity implements RequestListener {
                                                           .getJSONArray(JsonData.PARAM_RESOLVED_INCIDENTS);
                     for (int i = 0; i < resolvedIncidents.length(); i++) {
                         JSONObject job = resolvedIncidents.getJSONObject(i);
-                        if (logs.containsKey(job.getLong(JsonData.PARAM_INCIDENT_ID))) events.put(job.getLong(JsonData.PARAM_INCIDENT_ID), job);
+                        int key = job.getInt(JsonData.PARAM_INCIDENT_ID);
+                        if (logs.get(key) != null) {
+                            Log.d("AlerteVoirie_PM", "add resolved incident "+key);
+                            events.put(key, job);
+                        }
                     }
 
                     for (JSONObject log : logList.values()) {
-                        JSONObject job = new JSONObject(events.get(log.getLong(JsonData.ANSWER_INCIDENT_ID)).toString());
-                        job.put(JsonData.PARAM_INCIDENT_DATE, log.getString(JsonData.PARAM_INCIDENT_DATE));
-                        items.put(job);
-
-                        if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(log.getString(JsonData.PARAM_STATUS))
-                            || JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(log.getString(JsonData.PARAM_STATUS))) {
-                            lock.add(log.getLong(JsonData.ANSWER_INCIDENT_ID));
+                        int id = log.getInt(JsonData.ANSWER_INCIDENT_ID);
+                        Log.d("AlerteVoirie_PM", "key bug "+id);
+                        JSONObject jsonObject = events.get(id);
+                        if (jsonObject != null) {                            
+                            String json = jsonObject.toString();
+                            JSONObject job = new JSONObject(json);
+                            job.put(JsonData.PARAM_INCIDENT_DATE, log.getString(JsonData.PARAM_INCIDENT_DATE));
+                            items.put(job);
+                            
+                            if (JsonData.PARAM_UPDATE_INCIDENT_INVALID.equals(log.getString(JsonData.PARAM_STATUS))
+                                    || JsonData.PARAM_UPDATE_INCIDENT_RESOLVED.equals(log.getString(JsonData.PARAM_STATUS))) {
+                                lock.add(id);
+                            }
                         }
                     }
 
@@ -216,6 +235,21 @@ public class NewsActivity extends ListActivity implements RequestListener {
                 Log.e(Constants.PROJECT_TAG, "Error parsing date", e);
             }
             return date;
+        }
+        
+        @Override
+        public boolean isEnabled(int position) {
+            JSONObject item = (JSONObject) getItem(position);
+            
+            //detect if invalid
+            try {
+                if (item.getInt(JsonData.PARAM_INCIDENT_INVALIDATION)>0 || "R".equals(item.getString(JsonData.PARAM_INCIDENT_STATUS))) {
+                    return false;
+                }
+            } catch (JSONException e1) {
+            }
+            
+            return true;
         }
 
         @Override
@@ -282,7 +316,7 @@ public class NewsActivity extends ListActivity implements RequestListener {
                     iw.setVisibility(View.INVISIBLE);
                 }
 
-                if (lock.contains(incident.id)) {
+                if (lock.contains(incident.id) || !isEnabled(position)) {
                     v.findViewById(R.id.Arrow_details).setVisibility(View.GONE);
                 } else {
                     v.findViewById(R.id.Arrow_details).setVisibility(View.VISIBLE);
@@ -301,7 +335,9 @@ public class NewsActivity extends ListActivity implements RequestListener {
         // Log.d(Constants.PROJECT_TAG, "onListItemClick : "+l.getAdapter().getItem(position));
         Intent i = new Intent(this, ReportDetailsActivity.class);
         i.putExtra("existing", true);
-        i.putExtra("event", l.getAdapter().getItem(position).toString());
+
+        JSONObject item = (JSONObject) l.getAdapter().getItem(position);
+        i.putExtra("event", item.toString());
 
         try {
             Incident incident = Incident.fromJSONObject(this, new JSONObject(((MagicAdapter) getListAdapter()).getItem(position).toString()));

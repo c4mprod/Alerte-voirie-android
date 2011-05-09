@@ -91,6 +91,7 @@ public class AVService {
 
         @Override
         protected void onPostExecute(String result) {
+            
             Log.d("AlerteVoirie_PM", "Request response : "+result);
             if (exception == null) {
                 try {

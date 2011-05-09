@@ -216,14 +216,26 @@ public class MyIncidentsActivity extends ListActivity implements RequestListener
                     answer = answer.getJSONObject(JsonData.PARAM_ANSWER);
                     try {
                         for (int i = 0; i < 3; i++) {
-                            title[i] = answer.getString(INCIDENTS[i])
-                                       + "\n"
-                                       + (INCIDENTS[i].equals("declared_incidents") ? getString(R.string.home_label_current)
-                                                                                   : INCIDENTS[i].equals("updated_incidents") ? getString(R.string.home_label_update)
-                                                                                                                             : INCIDENTS[i].equals("resolved_incidents") ? getString(R.string.home_label_solved)
-                                                                                                                                                                        : "");
+                            int quantity = Integer.parseInt(answer.getString(INCIDENTS[i]));
 
-                            if (Integer.parseInt(answer.getString(INCIDENTS[i])) > 1 && INCIDENTS[i].equals("resolved_incidents")) title[i] += "s";
+                            String stitle = null; 
+                            switch (i) {
+                                case 0:
+                                    stitle = getResources().getQuantityString(R.plurals.home_label_current,quantity,quantity);
+                                    break;
+                                case 1:
+                                    stitle = getResources().getQuantityString(R.plurals.home_label_update,quantity,quantity);
+                                    break;
+                                case 2:
+                                    stitle = getResources().getQuantityString(R.plurals.home_label_solved,quantity,quantity);
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                            
+                            title[i] = stitle;
+
 
                             ((TextView) tabs.getChildAt(i)).setText(title[i]);
                             if (title[i].startsWith("0")) ((TextView) tabs.getChildAt(i)).setEnabled(false);

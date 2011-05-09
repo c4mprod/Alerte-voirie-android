@@ -52,7 +52,7 @@ public class AVServiceErrorException extends Exception {
             case 16:
                 return "Bad incident identifier(getIncidentById)";
             case 17:
-                return "The incident is already put to status \"Resolved\" by the same user";
+                return "The incident is already put to status \"resolved\" by the same user";
             case 18:
                 return "The user already confirm this incident";
             case 19:
