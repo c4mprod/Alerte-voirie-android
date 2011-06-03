@@ -50,7 +50,7 @@ public interface JsonData {
     String PARAM_DECLARED_INCIDENTS                = "declared_incidents";
 
     String VALUE_REQUEST_UPDATE_INCIDENT           = "updateIncident";
-    String PARAM_UPDATE_INCIDENT_RESOLVED          = "resolved";
+    String PARAM_UPDATE_INCIDENT_RESOLVED          = "Resolved";
     String PARAM_UPDATE_INCIDENT_CONFIRMED         = "Confirmed";
     String PARAM_UPDATE_INCIDENT_INVALID           = "Invalid";
     String PARAM_UPDATE_INCIDENT_NEW               = "NewIncident";

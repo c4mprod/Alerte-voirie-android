@@ -24,7 +24,7 @@
             android:id="@+id/ImageView_icn"
             android:src="@drawable/icn_incident_resolu2"
             android:layout_marginLeft="5dip"
-            android:layout_marginTop="5dip"></ImageView>
+            android:layout_marginTop="5dip" />
     </FrameLayout>
     <RelativeLayout
         android:id="@+id/RelativeLayout01"
@@ -54,7 +54,7 @@
             android:layout_marginBottom="5dip"
             android:layout_below="@+id/TextView_text"
             android:gravity="bottom"
-            android:visibility="gone"></TextView>
+            android:visibility="gone" />
     </RelativeLayout>
 
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string
+        name="credits_text">&quot;L'application AlerteVoirie a été designée par faberNovel et développée par C4M avec le soutien de Proxima Mobile.
+
+  
+Une remarque, une suggestion :&quot;</string>
+    <string name="credits_email">contact@alertevoirie.com</string>
+</resources>

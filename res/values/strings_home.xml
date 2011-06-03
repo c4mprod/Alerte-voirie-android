@@ -5,8 +5,22 @@
 <string name="home_btn_news">Actualités</string>
 <string name="home_btn_reports">Mes rapports</string>
 <string name="home_label_reports">Incidents autour de vous :</string>
-<string name="home_label_current">nouveau</string>
-<string name="home_label_update">mis à jour</string>
-<string name="home_label_solved">résolu</string>
+<plurals
+        name="home_label_current">
+        <item quantity="zero">%1$d\nnouveau</item>
+        <item quantity="one">%1$d\nnouveau</item>
+        <item quantity="other">%1$d\nnouveaux</item>
+</plurals>
+<plurals
+        name="home_label_update">
+        <item quantity="other">%1$d\nmis à jour</item>
+</plurals>
+<plurals
+        name="home_label_solved">
+        <item quantity="zero">%1$d\nrésolu</item>
+        <item quantity="one">%1$d\nrésolu</item>
+        <item quantity="other">%1$d\nrésolus</item>
+</plurals>
+        <string name="menu_credits">Crédits</string>
 
 </resources>

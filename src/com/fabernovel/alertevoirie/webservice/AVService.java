@@ -40,7 +40,7 @@ public class AVService {
     @SuppressWarnings("unused")
     private static final String URL_TEST       = "http://test.dev.playtomo.com/tools/testpost.php";
 
-    private static final String AV_URL         = AV_URL_PREPROD;
+    private static final String AV_URL         = AV_URL_PROD;
 
     private static final String AV_IMG_FAR     = "far";
     private static final String AV_IMG_CLOSE   = "close";

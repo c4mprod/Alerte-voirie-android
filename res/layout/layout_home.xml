@@ -1,108 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-		xmlns:android="http://schemas.android.com/apk/res/android"
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
-		android:orientation="vertical">
-
-    
-    
-    
-    <RelativeLayout android:layout_below="@+id/Button_reports" android:layout_height="wrap_content" android:id="@+id/RelativeLayout01" android:layout_width="fill_parent" android:layout_weight="1"><Button android:id="@+id/Button_new_incident" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_btn_new_incident" android:background="@drawable/btn_new_incident" android:layout_marginLeft="@dimen/home_button_margin_side" android:layout_marginBottom="@dimen/home_button_vertical_spacing" android:layout_marginTop="@dimen/home_button_vertical_spacing" /><Button android:id="@+id/Button_incidents" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_alignParentRight="true" android:text="@string/home_btn_incidents" android:background="@drawable/btn_incidents" android:layout_marginRight="@dimen/home_button_margin_side" android:layout_marginBottom="@dimen/home_button_vertical_spacing" android:layout_marginTop="@dimen/home_button_vertical_spacing" /><Button android:id="@+id/Button_reports" android:layout_below="@+id/Button_incidents" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/home_btn_reports" android:layout_alignParentRight="true" android:background="@drawable/btn_reports" android:layout_marginRight="@dimen/home_button_margin_side" /><Button android:id="@+id/Button_news" android:layout_below="@+id/Button_new_incident" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/home_btn_news" android:background="@drawable/btn_news" android:layout_marginLeft="@dimen/home_button_margin_side" /></RelativeLayout>
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
 
 
 
 
+    <RelativeLayout
+        android:layout_below="@+id/Button_reports"
+        android:layout_height="wrap_content"
+        android:id="@+id/RelativeLayout01"
+        android:layout_width="fill_parent"
+        android:layout_weight="1">
+        <Button
+            android:id="@+id/Button_new_incident"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_btn_new_incident"
+            android:background="@drawable/btn_new_incident"
+            android:layout_marginLeft="@dimen/home_button_margin_side"
+            android:layout_marginBottom="@dimen/home_button_vertical_spacing"
+            android:layout_marginTop="@dimen/home_button_vertical_spacing" />
+        <Button
+            android:id="@+id/Button_incidents"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="@string/home_btn_incidents"
+            android:background="@drawable/btn_incidents"
+            android:layout_marginRight="@dimen/home_button_margin_side"
+            android:layout_marginBottom="@dimen/home_button_vertical_spacing"
+            android:layout_marginTop="@dimen/home_button_vertical_spacing" />
+        <Button
+            android:id="@+id/Button_reports"
+            android:layout_below="@+id/Button_incidents"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="@string/home_btn_reports"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/btn_reports"
+            android:layout_marginRight="@dimen/home_button_margin_side" />
+        <Button
+            android:id="@+id/Button_news"
+            android:layout_below="@+id/Button_new_incident"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="@string/home_btn_news"
+            android:background="@drawable/btn_news"
+            android:layout_marginLeft="@dimen/home_button_margin_side" />
+    </RelativeLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/TextWhiteTitle"
+        android:id="@+id/Home_TextView_Events"
+        android:text="@string/home_label_reports"
+        android:layout_marginLeft="15dip"></TextView>
+    <LinearLayout
+        android:layout_below="@+id/RelativeLayout01"
+        android:id="@+id/LinearLayout01"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_weight="0"
+        android:layout_gravity="center"
+        android:layout_marginLeft="10dip"
+        android:layout_marginRight="10dip"
+        android:layout_marginTop="5dip"
+        android:layout_marginBottom="10dip">
+        <LinearLayout
+            android:id="@+id/LinearLayout02"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_marginRight="10dip"
+            style="@style/Button"
+            android:clickable="false"
+            android:layout_width="70dip">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|center_horizontal"
+                android:id="@+id/Home_TextView_Current"
+                style="@style/TextBlueTitle"
+                android:gravity="center"
+                android:textSize="13dip"></TextView>
 
-<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/TextWhiteTitle" android:id="@+id/Home_TextView_Events" android:text="@string/home_label_reports" android:layout_marginLeft="15dip"></TextView>
-		<LinearLayout
-				android:layout_below="@+id/RelativeLayout01"
-				android:id="@+id/LinearLayout01"
-				android:layout_height="wrap_content"
-				android:orientation="horizontal"
-				android:layout_width="fill_parent"
-				android:layout_weight="0"
-				android:layout_gravity="center"
-				android:layout_marginLeft="10dip"
-				android:layout_marginRight="10dip"
-				android:layout_marginTop="5dip"
-				android:layout_marginBottom="10dip">
-				<LinearLayout
-						android:id="@+id/LinearLayout02"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:orientation="vertical"
-						android:layout_gravity="center_vertical|center_horizontal"
-						android:layout_marginRight="10dip"
-						style="@style/Button"
-						android:clickable="false"
-						android:layout_width="70dip">
-						<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="0"
-								android:id="@+id/Home_TextView_Current_Number"
-								style="@style/TextBlueTitle"></TextView>
-						<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_gravity="center_vertical|center_horizontal"
-								android:id="@+id/Home_TextView_Current"
-								android:text="@string/home_label_current"
-								style="@style/TextBlueTitle"
-								android:textSize="13dip"></TextView>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/LinearLayout04"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical|center_horizontal"
+            style="@style/Button"
+            android:clickable="false"
+            android:layout_width="70dip">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/Home_TextView_Update"
+                android:textSize="13dip"
+                android:gravity="center"
+                style="@style/TextBlueTitle"></TextView>
 
-</LinearLayout>
-				<LinearLayout
-						android:id="@+id/LinearLayout04"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:orientation="vertical"
-						android:layout_gravity="center_vertical|center_horizontal"
-						style="@style/Button"
-						android:clickable="false"
-						android:layout_width="70dip">
-						<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="0"
-								android:id="@+id/Home_TextView_Update_Number"
-								style="@style/TextBlueTitle"></TextView>
-						<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/home_label_update"
-								android:id="@+id/Home_TextView_Update"
-								android:textSize="13dip"
-								style="@style/TextBlueTitle"></TextView>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/LinearLayout03"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="10dip"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical|center_horizontal"
+            style="@style/Button"
+            android:clickable="false"
+            android:layout_width="70dip">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/Home_TextView_Solved"
+                android:textSize="13dip"
+                android:gravity="center"
+                style="@style/TextBlueTitle"></TextView>
 
-				</LinearLayout>
-				<LinearLayout
-						android:id="@+id/LinearLayout03"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:layout_marginLeft="10dip"
-						android:orientation="vertical"
-						android:layout_gravity="center_vertical|center_horizontal"
-						style="@style/Button"
-						android:clickable="false"
-						android:layout_width="70dip">
-						<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="0"
-								android:id="@+id/Home_TextView_Solved_Number"
-								style="@style/TextBlueTitle"></TextView>
-						<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/home_label_solved"
-								android:id="@+id/Home_TextView_Solved"
-								android:textSize="13dip"
-								style="@style/TextBlueTitle"></TextView>
+        </LinearLayout>
 
-</LinearLayout>
-
-		</LinearLayout>
+    </LinearLayout>
 
 </LinearLayout>

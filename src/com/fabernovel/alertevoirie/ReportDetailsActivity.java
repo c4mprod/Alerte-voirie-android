@@ -125,8 +125,10 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         requestWindowFeature(Window.FEATURE_LEFT_ICON);
         setContentView(R.layout.layout_report_details);
 
+        boolean existingIncident = getIntent().getBooleanExtra("existing", false);
+
         // init title
-        getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, R.drawable.icon_nouveau_rapport);
+        getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, existingIncident?R.drawable.icon_mes_rapports:R.drawable.icon_nouveau_rapport);
         getWindow().setTitle(getString(R.string.report_detail_new_report_title));
 
         findViewById(R.id.LinearLayout_comment).setVisibility(View.GONE);
@@ -140,7 +142,7 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
         img_far.delete();
         img_far2.delete();
 
-        if (getIntent().getBooleanExtra("existing", false)) {
+        if (existingIncident) {
             validate.setVisibility(View.GONE);
             validate.setEnabled(true);
             findViewById(R.id.existing_incidents_layout).setVisibility(View.VISIBLE);
@@ -203,6 +205,12 @@ public class ReportDetailsActivity extends Activity implements OnClickListener, 
             setCategory(getIntent().getLongExtra(IntentData.EXTRA_CATEGORY_ID, 0));
             startActivityForResult(new Intent(this, SelectPositionActivity.class), REQUEST_POSITION);
         }
+    }
+    
+    @Override
+    protected void onStop() {
+        super.onStop();
+        timeoutHandler.removeCallbacks(timeout);
     }
 
     private void requestAdditionalPhotos() {
