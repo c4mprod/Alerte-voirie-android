@@ -7,8 +7,7 @@
     <application
         android:icon="@drawable/icon"
         android:label="@string/app_name"
-        android:theme="@style/Main"
-        android:debuggable="true">
+        android:theme="@style/Main" android:debuggable="false">
         <activity
             android:label="@string/app_name"
             android:name=".SplashScreenActivity"
